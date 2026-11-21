@@ -1,0 +1,122 @@
+import { gsap } from "gsap";
+
+const STAGE = { width: 1920, height: 1080 };
+const FADE = 0.35;
+const NEXT_KEYS = new Set(["ArrowRight", "ArrowDown", "PageDown", " "]);
+const PREV_KEYS = new Set(["ArrowLeft", "ArrowUp", "PageUp"]);
+
+/** Marque la fin d'une étape : l'orateur s'arrête ici. */
+export function pause(tl) {
+  return tl.addLabel(`stop-${Object.keys(tl.labels).length}`);
+}
+
+/** Lance la présentation : chaque slide est une fonction (élément) => timeline GSAP. */
+export function startDeck(slides, { footer } = {}) {
+  const stage = document.querySelector(".stage");
+  const footerNode = footer ? renderFooter(stage, footer) : null;
+  const state = { index: -1, step: 0, current: null, tween: null };
+
+  const fit = () => {
+    const scale = Math.min(innerWidth / STAGE.width, innerHeight / STAGE.height);
+    stage.style.transform = `translate(-50%, -50%) scale(${scale})`;
+  };
+
+  function mount(index) {
+    const el = document.createElement("section");
+    el.className = "slide";
+    stage.insertBefore(el, footerNode);
+    const tl = slides[index](el).pause(0);
+    const times = Object.entries(tl.labels).filter(([name]) => name.startsWith("stop-")).map(([, t]) => t);
+    const stops = [...new Set(times)].filter((t) => t > 0).sort((a, b) => a - b);
+    if (!stops.length || stops.at(-1) < tl.duration() - 1e-6) stops.push(tl.duration());
+    return { el, tl, stops };
+  }
+
+  function show(index, step, animate) {
+    state.tween?.kill();
+    let changed = false;
+    if (index !== state.index) {
+      const old = state.current;
+      stage.querySelectorAll(".slide.leaving").forEach((el) => el.remove());
+      old?.tl.kill();
+      if (old && animate) {
+        old.el.classList.add("leaving");
+        gsap.to(old.el, { opacity: 0, duration: FADE, ease: "power2.in", onComplete: () => old.el.remove() });
+      } else old?.el.remove();
+      changed = Boolean(old);
+      state.current = mount(index);
+      state.index = index;
+    }
+    const { tl, stops } = state.current;
+    const target = step < 0 ? stops.length - 1 : step;
+    if (animate) {
+      const from = target === 0 ? 0 : stops[target - 1];
+      tl.seek(from);
+      state.tween = tl.tweenFromTo(from, stops[target], { delay: changed ? FADE * 0.6 : 0 });
+    } else tl.seek(stops[target]);
+    state.step = target;
+    if (footerNode) footerNode.querySelector(".page").textContent = String(index + 1).padStart(2, "0");
+    history.replaceState(null, "", `#/${index + 1}/${target + 1}`);
+  }
+
+  function next() {
+    if (state.step < state.current.stops.length - 1) show(state.index, state.step + 1, true);
+    else if (state.index < slides.length - 1) show(state.index + 1, 0, true);
+  }
+
+  function prev() {
+    if (state.step > 0) show(state.index, state.step - 1, false);
+    else if (state.index > 0) show(state.index - 1, -1, false);
+  }
+
+  function fromHash() {
+    const match = location.hash.match(/^#\/(\d+)(?:\/(\d+))?/);
+    if (!match) return false;
+    const index = Math.min(Math.max(Number(match[1]) - 1, 0), slides.length - 1);
+    show(index, 0, false);
+    show(index, Math.min(Number(match[2] ?? 1) - 1, state.current.stops.length - 1), false);
+    return true;
+  }
+
+  addEventListener("resize", fit);
+  addEventListener("hashchange", fromHash);
+  addEventListener("keydown", (event) => {
+    if (NEXT_KEYS.has(event.key)) next();
+    else if (PREV_KEYS.has(event.key)) prev();
+    else if (event.key === "Home") show(0, 0, false);
+    else if (event.key === "End") show(slides.length - 1, -1, false);
+    else if (event.key === "f") document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
+    else return;
+    event.preventDefault();
+  });
+  fit();
+  if (!fromHash()) show(0, 0, true);
+  liveReload();
+
+  window.deck = {
+    goto: (slide, step = 1) => show(slide - 1, step - 1, false),
+    /** Fige l'animation de l'étape à une fraction de sa durée (0 = début, 1 = fin). */
+    frame: (slide, step, fraction) => {
+      show(slide - 1, step - 1, false);
+      const { tl, stops } = state.current;
+      const from = step === 1 ? 0 : stops[step - 2];
+      tl.seek(from + (stops[step - 1] - from) * fraction);
+    },
+    info: () => ({ slide: state.index + 1, step: state.step + 1, steps: state.current.stops.length, slides: slides.length }),
+  };
+}
+
+function renderFooter(stage, items) {
+  const node = document.createElement("footer");
+  node.className = "footer";
+  node.innerHTML = `${items.map((item) => `<span>${item}</span>`).join("")}<span class="page"></span>`;
+  stage.appendChild(node);
+  return node;
+}
+
+/** Recharge la page quand deck/serve.py signale un fichier modifié ; ignoré ailleurs. */
+function liveReload() {
+  const source = new EventSource("/__reload");
+  source.onmessage = () => location.reload();
+  source.onerror = () => source.readyState === EventSource.CLOSED && source.close();
+}

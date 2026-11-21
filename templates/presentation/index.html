@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{title}}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" />
+    <link rel="stylesheet" href="/deck/theme.css" />
+    <script type="importmap">
+      {
+        "imports": {
+          "gsap": "https://cdn.jsdelivr.net/npm/gsap@3.12.5/+esm",
+          "katex": "https://cdn.jsdelivr.net/npm/katex@0.16.11/+esm",
+          "deck/": "/deck/"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <main class="stage"></main>
+    <script type="module">
+      import { startDeck } from "deck/deck.js";
+      import cover from "./pages/cover.js";
+
+      await document.fonts.load("44px 'EB Garamond'");
+      startDeck([cover], { footer: ["{{title}}", "", ""] });
+    </script>
+  </body>
+</html>

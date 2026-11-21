@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "pooling-course",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["tools/serve.py", "presentations/2026/pooling_course", "--port", "8001"],
+      "port": 8001
+    }
+  ]
+}

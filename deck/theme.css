@@ -1,0 +1,100 @@
+:root {
+  --paper: #f6f8fc;
+  --panel: #fbfcfe;
+  --ink: #1b2a4a;
+  --ink-soft: #5a6884;
+  --line: #c8d2e3;
+
+  --blue: #4a78d0;
+  --blue-fill: rgba(110, 150, 230, 0.26);
+  --blue-soft: rgba(214, 226, 250, 0.8);
+  --green: #2f9e7f;
+  --green-fill: rgba(70, 180, 140, 0.24);
+  --red: #d1605a;
+  --red-fill: rgba(230, 110, 100, 0.24);
+
+  --serif: "EB Garamond", Georgia, serif;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: #e6ebf3;
+}
+
+.stage {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 1920px;
+  height: 1080px;
+  overflow: hidden;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--serif);
+  transform-origin: center;
+}
+
+.slide {
+  position: absolute;
+  inset: 0;
+}
+
+.canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.abs {
+  position: absolute;
+  white-space: nowrap;
+}
+
+.title {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 78px;
+  text-align: center;
+  font-size: 68px;
+  font-weight: 500;
+  letter-spacing: 0.005em;
+}
+
+.muted {
+  color: var(--ink-soft);
+}
+
+.panel {
+  position: absolute;
+  border: 3px solid var(--ink);
+  border-radius: 16px;
+  background: var(--panel);
+}
+
+.card {
+  position: absolute;
+  border: 2px solid var(--blue);
+  border-radius: 18px;
+  background: var(--blue-soft);
+}
+
+.footer {
+  position: absolute;
+  left: 120px;
+  right: 120px;
+  bottom: 26px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 24px;
+  color: var(--ink-soft);
+}
+
+.c-blue { color: var(--blue); }
+.c-green { color: var(--green); }
+.c-red { color: var(--red); }
