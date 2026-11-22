@@ -22,13 +22,37 @@
   <body>
     <main class="stage"></main>
     <script type="module">
-      import { startDeck } from "deck/deck.js";
-      import plan from "./pages/plan.js";
-      import pooling from "./pages/pooling.js";
-      import architecture from "./pages/architecture.js";
+      import { section, startDeck } from "deck/deck.js";
+      import intro from "./pages/intro.js";
+      import example from "./pages/example.js";
+      import plan, { recap, where } from "./pages/plan.js";
+      import thesis from "./pages/thesis.js";
+      import motivation from "./pages/motivation.js";
+      import mpnn from "./pages/mpnn.js";
+      import layer from "./pages/layer.js";
+      import underreach from "./pages/underreach.js";
+      import smoothing from "./pages/smoothing.js";
+      import squashing from "./pages/squashing.js";
+      import depth from "./pages/depth.js";
+      import src from "./pages/src.js";
+      import taxonomy from "./pages/taxonomy.js";
+      import topk from "./pages/topk.js";
+      import diffpool from "./pages/diffpool.js";
+      import mincut from "./pages/mincut.js";
+      import mivs from "./pages/mivs.js";
 
       await document.fonts.load("44px 'EB Garamond'");
-      startDeck([plan, pooling, architecture], { footer: ["MLG", "Hugo Hamon", "18/10/2026"] });
+      // Le contexte de partie n'apparaît dans le pied de page qu'à partir du plan.
+      const slides = [
+        intro,
+        example,
+        ...[plan, thesis, motivation].map((slide) => section(slide, where())),
+        ...[recap(0), mpnn, layer].map((slide) => section(slide, where(0))),
+        ...[recap(1), underreach, smoothing, squashing, depth].map((slide) => section(slide, where(1))),
+        ...[recap(2), src, taxonomy].map((slide) => section(slide, where(2))),
+        ...[recap(3), topk, diffpool, mincut, mivs].map((slide) => section(slide, where(3))),
+      ];
+      startDeck(slides, { footer: ["MLG", "Hugo Hamon", "18/10/2026"] });
     </script>
   </body>
 </html>

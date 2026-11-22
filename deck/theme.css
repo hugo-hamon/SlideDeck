@@ -88,11 +88,35 @@ body {
   position: absolute;
   left: 120px;
   right: 120px;
-  bottom: 26px;
+  bottom: 24px;
+  height: 36px;
   display: flex;
+  align-items: center;
   justify-content: space-between;
   font-size: 24px;
   color: var(--ink-soft);
+}
+
+.footer .info,
+.footer .where,
+.footer .context {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.footer .sep {
+  opacity: 0.6;
+}
+
+/* Le numéro de page est séparé du contexte par un filet vertical. */
+.footer .page {
+  min-width: 40px;
+  padding-left: 18px;
+  border-left: 2px solid var(--line);
+  color: var(--ink);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
 .c-blue { color: var(--blue); }

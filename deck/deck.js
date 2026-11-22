@@ -10,6 +10,16 @@ export function pause(tl) {
   return tl.addLabel(`stop-${Object.keys(tl.labels).length}`);
 }
 
+/**
+ * Associe à une slide un contexte affiché dans le pied de page (partie en cours, etc.).
+ * Sans contexte, la zone reste vide : utile avant l'annonce du plan.
+ */
+export function section(slide, html) {
+  const wrapped = (root) => slide(root);
+  wrapped.context = html;
+  return wrapped;
+}
+
 /** Lance la présentation : chaque slide est une fonction (élément) => timeline GSAP. */
 export function startDeck(slides, { footer } = {}) {
   const stage = document.querySelector(".stage");
@@ -55,7 +65,7 @@ export function startDeck(slides, { footer } = {}) {
       state.tween = tl.tweenFromTo(from, stops[target], { delay: changed ? FADE * 0.6 : 0 });
     } else tl.seek(stops[target]);
     state.step = target;
-    if (footerNode) footerNode.querySelector(".page").textContent = String(index + 1).padStart(2, "0");
+    if (footerNode) updateFooter(footerNode, index, slides[index].context ?? "", animate);
     history.replaceState(null, "", `#/${index + 1}/${target + 1}`);
   }
 
@@ -109,9 +119,31 @@ export function startDeck(slides, { footer } = {}) {
 function renderFooter(stage, items) {
   const node = document.createElement("footer");
   node.className = "footer";
-  node.innerHTML = `${items.map((item) => `<span>${item}</span>`).join("")}<span class="page"></span>`;
+  const info = items.filter(Boolean).map((item) => `<span>${item}</span>`).join('<span class="sep">·</span>');
+  node.innerHTML = `<div class="info">${info}</div><div class="where"><span class="context"></span><span class="page"></span></div>`;
   stage.appendChild(node);
   return node;
+}
+
+/** Numéro de page et contexte ; le contexte change en fondu quand on change de partie. */
+function updateFooter(node, index, html, animate) {
+  node.querySelector(".page").textContent = String(index + 1).padStart(2, "0");
+  const context = node.querySelector(".context");
+  if (context.dataset.html === html) return;
+  context.dataset.html = html;
+  gsap.killTweensOf(context);
+  if (!animate) {
+    context.innerHTML = html;
+    gsap.set(context, { opacity: 1, x: 0 });
+    return;
+  }
+  gsap.to(context, {
+    opacity: 0, x: 8, duration: 0.2, ease: "power2.in",
+    onComplete: () => {
+      context.innerHTML = html;
+      gsap.fromTo(context, { opacity: 0, x: -8 }, { opacity: 1, x: 0, duration: 0.5, ease: "expo.out" });
+    },
+  });
 }
 
 /** Recharge la page quand deck/serve.py signale un fichier modifié ; ignoré ailleurs. */
