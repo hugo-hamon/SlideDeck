@@ -7,6 +7,7 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
 from playwright.sync_api import Page, sync_playwright
+from serve import feedback_file, send_feedback
 
 ROOT = Path(__file__).resolve().parent.parent
 TILE = (640, 360)
@@ -42,12 +43,17 @@ def parse_args() -> argparse.Namespace:
 
 
 class QuietHandler(SimpleHTTPRequestHandler):
-    """Sert le dépôt sans journal ; 204 sur /__reload coupe le rechargement automatique."""
+    """Sert le dépôt sans journal ; 204 sur /__reload coupe le rechargement automatique.
+
+    Les retours du mode Édition restent lisibles (tools/review.py les affiche).
+    """
 
     def do_GET(self) -> None:
         if self.path == "/__reload":
             self.send_response(204)
             self.end_headers()
+        elif (target := feedback_file(self.path)) is not None:
+            send_feedback(self, target)
         else:
             super().do_GET()
 

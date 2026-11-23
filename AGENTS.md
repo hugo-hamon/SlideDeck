@@ -15,8 +15,8 @@ code et rapidité d'itération. Ces règles s'appliquent à Claude Code, Codex e
 
 ```text
 SlideDeck/
-├── deck/                 # moteur partagé : deck.js, components.js, theme.css
-├── tools/                # serve.py (aperçu), capture.py (storyboard), new.py (création)
+├── deck/                 # moteur partagé : deck.js, components.js, theme.css, review.js (mode Édition)
+├── tools/                # serve.py (aperçu), capture.py (storyboard), review.py (retours), new.py
 ├── templates/presentation/
 └── presentations/<année>/<nom_en_snake_case>/
     ├── index.html        # ordre des slides, pied de page
@@ -88,7 +88,23 @@ export default function maSlide(root) {      // root : <section> vide, scène 19
    d'animation pour juger le mouvement.
 4. Corriger de façon ciblée, recapturer seulement la slide concernée.
 
-## 7. Avant de livrer
+## 7. Retours de l'utilisateur (mode Édition)
+
+L'utilisateur annote les slides dans le navigateur (touche `e`) : zones entourées au feutre,
+notes ponctuelles, note générale par slide. Tout est dans `<présentation>/feedback.json`.
+
+1. `.venv/bin/python tools/review.py presentations/<année>/<nom>` : affiche le résumé
+   (`.inspection/review/review.md`) et produit une capture annotée par étape (`sNN-eNN.png`).
+   Ouvrir ces captures : les numéros des annotations y correspondent au résumé.
+2. Chaque annotation donne la slide, l'étape, le commentaire, la zone en px de la scène et
+   les éléments visés (balise, classe, texte ou LaTeX, boîte) pour retrouver le code.
+   Le nom de la fonction de slide (`plan()`) indique le fichier dans `pages/`.
+3. Traiter **tous** les retours, recapturer les slides touchées avec `capture.py`.
+4. Archiver avant de modifier les slides : `tools/review.py … --clear` (la page rechargée
+   repart alors de retours vides). Résumer à l'utilisateur ce qui a été fait pour chaque
+   retour, et ce qui ne l'a pas été.
+
+## 8. Avant de livrer
 
 - Le storyboard a été **réellement inspecté** ; `report.json` ne signale ni erreur ni hors-cadre.
 - Chaque étape a un début, une fin et un temps d'observation pertinent.
@@ -97,7 +113,7 @@ export default function maSlide(root) {      // root : <section> vide, scène 19
 - Mettre à jour le `README.md` de la présentation si son contenu ou ses commandes changent.
 - Résumer : fichiers modifiés, captures vérifiées, limites éventuelles.
 
-## 8. Quand demander une précision
+## 9. Quand demander une précision
 
 Seulement si la réponse change le fond ou l'expérience : public, notion à démontrer,
 nombre d'étapes, format de livraison. Pour le reste, choisir simplement et l'expliquer.

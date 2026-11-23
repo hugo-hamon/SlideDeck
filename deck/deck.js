@@ -1,4 +1,5 @@
 import { gsap } from "gsap";
+import { createReview } from "./review.js";
 
 const STAGE = { width: 1920, height: 1080 };
 const FADE = 0.35;
@@ -17,6 +18,7 @@ export function pause(tl) {
 export function section(slide, html) {
   const wrapped = (root) => slide(root);
   wrapped.context = html;
+  wrapped.slideName = slide.slideName ?? slide.name;
   return wrapped;
 }
 
@@ -26,8 +28,17 @@ export function startDeck(slides, { footer } = {}) {
   const footerNode = footer ? renderFooter(stage, footer) : null;
   const state = { index: -1, step: 0, current: null, tween: null };
 
+  const review = createReview(stage, {
+    names: slides.map((slide) => slide.slideName ?? slide.name ?? ""),
+    goto: (index, step) => show(index, step, false),
+    onLayout: () => fit(),
+  });
+
+  // En mode Édition, la scène laisse la place au panneau latéral.
   const fit = () => {
-    const scale = Math.min(innerWidth / STAGE.width, innerHeight / STAGE.height);
+    const width = innerWidth - review.inset();
+    const scale = Math.min(width / STAGE.width, innerHeight / STAGE.height);
+    stage.style.left = `${width / 2}px`;
     stage.style.transform = `translate(-50%, -50%) scale(${scale})`;
   };
 
@@ -66,6 +77,7 @@ export function startDeck(slides, { footer } = {}) {
     } else tl.seek(stops[target]);
     state.step = target;
     if (footerNode) updateFooter(footerNode, index, slides[index].context ?? "", animate);
+    review.update(index, target, stops.length);
     history.replaceState(null, "", `#/${index + 1}/${target + 1}`);
   }
 
@@ -91,6 +103,9 @@ export function startDeck(slides, { footer } = {}) {
   addEventListener("resize", fit);
   addEventListener("hashchange", fromHash);
   addEventListener("keydown", (event) => {
+    if (event.target.closest?.("input, textarea, [contenteditable]")) return;
+    if (review.handleKey(event)) return event.preventDefault();
+    if (event.ctrlKey || event.metaKey || event.altKey) return;
     if (NEXT_KEYS.has(event.key)) next();
     else if (PREV_KEYS.has(event.key)) prev();
     else if (event.key === "Home") show(0, 0, false);
@@ -112,6 +127,8 @@ export function startDeck(slides, { footer } = {}) {
       const from = step === 1 ? 0 : stops[step - 2];
       tl.seek(from + (stops[step - 1] - from) * fraction);
     },
+    /** Retours du mode Édition (touche `e`) : voir tools/review.py. */
+    review: review.api,
     info: () => ({ slide: state.index + 1, step: state.step + 1, steps: state.current.stops.length, slides: slides.length }),
   };
 }
