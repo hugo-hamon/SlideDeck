@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 304 80" width="304" height="80" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <title>SlideDeck</title>
+  <g transform="translate(2 4) scale(2.25)">
+    <rect x="3" y="5.5" width="26" height="18" rx="3.5" fill="#fff" stroke="#e6edf3" stroke-width="2.2"/>
+    <path d="M11 14 21 11M11 14l8 4M21 11l-2 7" stroke="#8a93a8" stroke-width="1.6"/>
+    <circle cx="11" cy="14" r="3" fill="#4a78d0"/>
+    <circle cx="21" cy="11" r="3" fill="#2f9e7f"/>
+    <circle cx="19" cy="18" r="3" fill="#d1605a"/>
+    <path d="M16 23.5v3.5M11 27.5h10" stroke="#e6edf3" stroke-width="2.2"/>
+  </g>
+  <text x="90" y="53" fill="#e6edf3" font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="38" font-weight="700" letter-spacing="-0.5">SlideDeck</text>
+</svg>

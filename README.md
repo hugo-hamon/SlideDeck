@@ -1,5 +1,8 @@
 <p align="center">
-  <img src="docs/logo.svg" alt="SlideDeck" width="320">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/logo-dark.svg">
+    <img src="docs/logo.svg" alt="SlideDeck" width="440">
+  </picture>
 </p>
 
 <p align="center">
