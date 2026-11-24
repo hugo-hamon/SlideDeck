@@ -4,8 +4,8 @@ import { FILLS, canvas, label, svg, tex, title } from "deck/components.js";
 import { hops, line, swap, theme, versus } from "../helpers.js";
 
 /*
- * Arbre binaire accroché à t par une seule arête (le goulot) :
- * 0 = t, 1 = racine, 2–3 profondeur 1, 4–7 profondeur 2, 8–15 profondeur 3, 16–17 voisins de t.
+ * Binary tree attached to t by a single edge (the bottleneck):
+ * 0 = t, 1 = root, 2–3 depth 1, 4–7 depth 2, 8–15 depth 3, 16–17 neighbours of t.
  */
 const parent = (i) => (i === 1 ? 0 : i < 4 ? 1 : i < 8 ? 2 + ((i - 4) >> 1) : 4 + ((i - 8) >> 1));
 const TREE = Array.from({ length: 15 }, (_, k) => [parent(k + 1), k + 1]);
@@ -16,7 +16,7 @@ const LAYERS = 4;
 const NODE_R = 13;
 const SUPER_R = 40;
 const HOP = 0.4;
-/* Pooling : les deux sous-arbres, et la région de t. */
+/* Pooling: the two subtrees, and t's region. */
 const CLUSTER = (i) => (i === 0 || i === 1 || i >= 16 ? 2 : [2, 4, 5, 8, 9, 10, 11].includes(i) ? 0 : 1);
 const COARSE_LINKS = [[0, 2], [1, 2]];
 
@@ -41,7 +41,7 @@ function layout(panel) {
   return { nodes, supers, boxes, y };
 }
 
-/** Oversquashing structurel : un voisinage qui double à chaque couche doit passer par une seule arête. */
+/** Structural oversquashing: a neighbourhood that doubles at each layer must go through a single edge. */
 export default function squashing(root) {
   const heading = title(root, "Oversquashing structurel");
   const panels = versus(root, [["MPNN", "graphe d’origine"], ["MPNN + pooling", "graphe réduit"]]);
@@ -68,7 +68,7 @@ export default function squashing(root) {
   const rings = geo.map(({ nodes }) => svg(layer, "circle", { cx: nodes[T].x, cy: nodes[T].y, r: 24, style: "fill: none; stroke: var(--ink); stroke-width: 3.5" }));
   const tNames = geo.map(({ nodes }) => label(root, tex(String.raw`\htmlClass{c-blue}{t}`), nodes[T].x + 2, nodes[T].y + 56, 44));
 
-  // Pooling : trois régions, puis trois super-nœuds (deux sous-arbres et la région de t).
+  // Pooling: three regions, then three super-nodes (two subtrees and t's region).
   const hulls = right.boxes.map((b) => svg(hullLayer, "ellipse", { ...b, style: "fill: none; stroke: var(--ink-soft); stroke-width: 2; stroke-dasharray: 8 6" }));
   const coarseHalos = right.supers.map(({ x, y }) => svg(coarseLayer, "circle", { cx: x, cy: y, r: SUPER_R + 12, style: `fill: ${FILLS[0]}` }));
   const coarseEdges = COARSE_LINKS.map(([a, b]) => line(coarseLayer, right.supers[a], right.supers[b], `stroke: ${ink}`, { "stroke-width": 5, "stroke-opacity": 1 }));
@@ -76,7 +76,7 @@ export default function squashing(root) {
   gsap.set(coarseLayer, { opacity: 0 });
   gsap.set([...halos, ...coarseHalos], { scale: 0, transformOrigin: "50% 50%" });
 
-  // Compteurs : combien de nœuds doivent passer par la même arête pour atteindre t.
+  // Counters: how many nodes must go through the same edge to reach t.
   const countY = left.y + 250;
   const through = Array.from({ length: LAYERS + 1 }, (_, k) => TREE.filter(([, v]) => dist[v] <= k).length);
   const counts = through.slice(1).map((n) =>
@@ -98,7 +98,7 @@ export default function squashing(root) {
   const tl = gsap.timeline({ defaults: { ease: "expo.out" } });
   const pop = { scale: 0, transformOrigin: "50% 50%", duration: 0.5, ease: "back.out(2)" };
 
-  // 1. Le même graphe des deux côtés : un arbre accroché à t.
+  // 1. The same graph on both sides: a tree attached to t.
   tl.from(heading, { opacity: 0, y: 24, duration: 0.8 });
   tl.from(panels.map((p) => p.frame), { opacity: 0, scale: 0.98, duration: 0.7, stagger: 0.1 }, "<0.1");
   tl.from(panels.map((p) => p.head), { opacity: 0, x: -16, duration: 0.6, stagger: 0.1 }, "<0.2");
@@ -108,7 +108,7 @@ export default function squashing(root) {
   tl.from([...tNames, ...kTags.map((t) => t[0])], { opacity: 0, y: 10, duration: 0.5, stagger: 0.05 }, "<0.1");
   pause(tl);
 
-  // 2. À gauche, tout l'arbre n'atteint t que par une arête ; à droite, on poole.
+  // 2. On the left, the whole tree reaches t through one edge only, while on the right we pool.
   tl.addLabel("pool");
   tl.fromTo(neck, { opacity: 0 }, { opacity: 1, duration: 0.4, immediateRender: false }, "pool");
   tl.to(neck, { attr: { "stroke-width": 11 }, duration: 0.35, yoyo: true, repeat: 1, ease: "power2.inOut" }, "pool+=0.4");
@@ -129,7 +129,7 @@ export default function squashing(root) {
   tl.to([...graphs[1].dots, ...graphs[1].edges], { opacity: 0, duration: 0.3 }, "<");
   pause(tl);
 
-  // 3–6. Chaque couche ajoute un niveau de l'arbre ; tous les messages convergent vers le goulot.
+  // 3–6. Each layer adds one level of the tree and every message converges on the bottleneck.
   const fine = graphs[0];
   const edgeOf = (a, b) => LINKS.findIndex(([p, q]) => (p === a && q === b) || (p === b && q === a));
   const towardT = (v) => (v >= 16 ? T : parent(v));
@@ -141,7 +141,7 @@ export default function squashing(root) {
     frontier.forEach((v) => {
       tl.to(halos[v], { scale: 1, duration: 0.5, ease: "back.out(2)" }, at(0.2));
       tl.to(fine.dots[v], { fill: blue, duration: 0.4 }, at(0.2));
-      // Le message remonte vers t, un saut à la fois ; les messages se superposent aux embranchements.
+      // The message climbs towards t one hop at a time, and messages overlap at the branchings.
       const dot = svg(packets, "circle", { cx: left.nodes[v].x, cy: left.nodes[v].y, r: 9, style: `fill: ${blue}; stroke: var(--ink); stroke-width: 2.5` });
       gsap.set(dot, { opacity: 0 });
       tl.fromTo(dot, { opacity: 0 }, { opacity: 1, duration: 0.2, immediateRender: false }, at(0.5));
@@ -154,14 +154,14 @@ export default function squashing(root) {
       }
       tl.to(dot, { opacity: 0, duration: 0.2 }, at(0.7 + k * HOP));
     });
-    // Passage du goulot : il porte d'autant plus de nœuds que K grandit.
+    // Crossing the bottleneck: it carries more nodes as K grows.
     tl.to(neck, { attr: { "stroke-width": 7 + 2 * k }, duration: 0.25, yoyo: true, repeat: 1, ease: "power2.inOut" }, at(0.7 + (k - 1) * HOP));
     tl.to(rings[0], { scale: 1.2, transformOrigin: "50% 50%", duration: 0.2, yoyo: true, repeat: 1, ease: "power2.inOut" }, at(0.7 + k * HOP));
     if (k === 1) tl.fromTo(counts[0], { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.5, immediateRender: false }, at(0.9 + k * HOP));
     else swap(tl, counts[k - 2], counts[k - 1], at(0.7 + k * HOP));
 
     if (k === 1) {
-      // Graphe réduit : une couche suffit, chaque arête ne porte qu'un super-nœud.
+      // Coarse graph: one layer is enough, each edge carries a single super-node.
       swap(tl, kTags[1][0], kTags[1][1], "k1");
       [0, 1].forEach((c) => {
         tl.to(coarseHalos[c], { scale: 1, duration: 0.5, ease: "back.out(2)" }, at(0.2));

@@ -41,7 +41,7 @@ const ADJACENCY = String.raw`\begin{bmatrix}
 
 const line = (parent, a, b, style) => svg(parent, "line", { x1: a.x, y1: a.y, x2: b.x, y2: b.y, style });
 
-/** Le graphe fin se résume en trois communautés ; la matrice S écrit la même opération. */
+/** The fine graph is summarised into three communities, and the matrix S writes the same operation. */
 export default function pooling(root) {
   const heading = title(root, "Pooling : changer d’échelle");
   const layer = canvas(root);

@@ -10,7 +10,7 @@ const LABEL_X = 1470;
 const CELL = 30;
 const GAP = 4;
 const ROWS = { nodes: 280, readout: 372, graph: 462, edges: 770 };
-const ZOOM = 20; // assez pour que le contour de la boîte sorte du cadre avant la fin du zoom
+const ZOOM = 20; // enough for the box outline to leave the frame before the zoom ends
 
 function graphShape(parent, colors, r = 16) {
   const group = svg(parent, "g");
@@ -27,7 +27,7 @@ const square = (parent, x, y, color, side = CELL, faint = false) =>
     style: `fill: ${color}; stroke: ${color}; stroke-width: 1.5; stroke-opacity: ${faint ? 0.35 : 0.9}`,
   });
 
-/** Nom d'une sortie et tâche typique associée, alignés à gauche. */
+/** Name of an output and its typical task, left-aligned. */
 function outputLabel(root, name, task, y) {
   return div(root, "abs", {
     x: LABEL_X, y: y - 40,
@@ -36,14 +36,14 @@ function outputLabel(root, name, task, y) {
 }
 
 /**
- * Construit la vue d'ensemble. `done` : état final de la slide 07 (cases remplies, readout
- * visible), point de départ du zoom au début de la slide 08.
+ * Builds the overview. `done`: final state of slide 07 (filled cells, visible readout),
+ * the starting point of the zoom at the beginning of slide 08.
  */
 export function buildMacro(root, { done = false } = {}) {
   const colors = embeddingColors(8);
   const heading = title(root, "Rappel : MPNN");
   const layer = canvas(root);
-  // Deux groupes : `camera` se recentre sur la boîte, `world` s'agrandit autour d'elle.
+  // Two groups: `camera` recentres on the box, `world` grows around it.
   const camera = svg(layer, "g");
   const world = svg(camera, "g");
   const graph = graphShape(world, colors);
@@ -52,7 +52,7 @@ export function buildMacro(root, { done = false } = {}) {
 
   const box = svg(world, "rect", {
     x: BOX.x - BOX.w / 2, y: BOX.y - BOX.h / 2, width: BOX.w, height: BOX.h, rx: 14,
-    // Couleur résolue : GSAP peut ensuite la faire glisser vers celle du fond pendant le zoom.
+    // Resolved colour: GSAP can then slide it towards the background's colour during the zoom.
     style: `fill: ${theme("panel")}; stroke: var(--ink); stroke-width: 3; vector-effect: non-scaling-stroke`,
   });
   const boxText = label(root, "MPNN", BOX.x, BOX.y, 56);
@@ -83,7 +83,7 @@ export function buildMacro(root, { done = false } = {}) {
   const readoutName = label(root, "readout", OUT_X - 200, ROWS.readout, 28, "abs muted");
   const graphText = outputLabel(root, "Graphe", "classification de graphes", ROWS.graph);
 
-  // Paires (ligne, colonne) reliées, dans l'ordre de lecture de la matrice.
+  // Linked (row, column) pairs, in the matrix's reading order.
   const pairs = [];
   for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) if (linked(i, j)) pairs.push([i, j]);
 
@@ -97,22 +97,22 @@ export function buildMacro(root, { done = false } = {}) {
   };
 }
 
-/** Zoom : la caméra entre dans la boîte ; le nom « MPNN » garde sa taille et s'efface. */
+/** Zoom: the camera enters the box while the "MPNN" name keeps its size and fades out. */
 export function zoomIn(tl, { camera, world, box, boxText, texts }, position) {
   tl.addLabel("zoom", position);
   tl.to(texts, { opacity: 0, duration: 0.4, ease: "power2.in" }, "zoom");
   tl.to(boxText, { opacity: 0, duration: 0.5, ease: "power2.in" }, "zoom");
-  // La boîte se recentre vite, puis l'agrandissement accélère : ses bords sortent du cadre avant la fin.
+  // The box recentres quickly, then the scaling accelerates: its edges leave the frame before the end.
   tl.to(camera, { x: 960 - BOX.x, y: 540 - BOX.y, duration: 1.2, ease: "power2.inOut" }, "zoom");
   tl.to(world, { scale: ZOOM, svgOrigin: `${BOX.x} ${BOX.y}`, duration: 1.6, ease: "power3.in" }, "zoom");
   tl.to(box, { fill: theme("paper"), duration: 1.4, ease: "power2.inOut" }, "zoom+=0.1");
-  // Le contour reste visible : il sort du cadre de lui-même à la fin de l'agrandissement.
-  // Hors cadre après l'agrandissement : on masque chaque élément pour l'inspection.
+  // The outline stays visible: it leaves the frame by itself at the end of the scaling.
+  // Out of frame after the scaling: hide every element for the inspection.
   tl.to([camera, ...camera.querySelectorAll("*")], { opacity: 0, duration: 0.05 }, ">");
   return tl;
 }
 
-/** Le MPNN comme une boîte : embeddings de nœuds, d'arêtes, puis de graphe. */
+/** The MPNN as a box: node, edge, then graph embeddings. */
 export default function mpnn(root) {
   const m = buildMacro(root);
   const { graph, packet, box, boxText, nodeCells, link, nodeText, matrix, rowCopies, colCopies, edgeText, rowX, rowY } = m;
@@ -120,7 +120,7 @@ export default function mpnn(root) {
   const pooled = m.colors.map((c, i) => square(m.world, rowX(i), ROWS.nodes, c));
   pooled.forEach((cell) => cell.setAttribute("fill-opacity", 0.9));
   gsap.set(pooled, { opacity: 0 });
-  // Les copies ligne / colonne n'existent qu'à partir de l'étape des arêtes.
+  // Row / column copies only exist from the edge step onwards.
   gsap.set([...rowCopies, ...colCopies], { opacity: 0 });
 
   const tl = gsap.timeline({ defaults: { ease: "expo.out" } });
@@ -130,7 +130,7 @@ export default function mpnn(root) {
   tl.from([box, boxText], { opacity: 0, scale: 0.9, transformOrigin: "50% 50%", duration: 0.6 }, "<0.2");
   pause(tl);
 
-  // Le graphe entre dans la boîte, qui rend un embedding par nœud.
+  // The graph enters the box, which returns one embedding per node.
   tl.fromTo(packet.group, { opacity: 0 }, { opacity: 1, duration: 0.1, immediateRender: false });
   tl.to(packet.group, { x: BOX.x - 330, y: 0, scale: 0.42, svgOrigin: "330 545", duration: 1.1, ease: "power3.inOut" }, "<");
   tl.to(packet.group, { opacity: 0, duration: 0.1 }, ">");
@@ -144,8 +144,8 @@ export default function mpnn(root) {
   });
   pause(tl);
 
-  // Les embeddings se recopient en tête de lignes et de colonnes, puis chaque arête (i, j)
-  // combine la case de la ligne i et celle de la colonne j.
+  // Embeddings are copied at the head of rows and columns, then each edge (i, j)
+  // combines row i's cell and column j's cell.
   tl.fromTo([...rowCopies, ...colCopies], { opacity: 0 }, { opacity: 1, duration: 0.15, immediateRender: false });
   tl.from(rowCopies, { x: (i) => rowX(i) - rowX(0) + CELL + GAP + 10, y: (i) => ROWS.nodes - rowY(i), duration: 1, ease: "power3.inOut" }, "<");
   tl.from(colCopies, { y: ROWS.nodes - m.matrixTop + CELL / 2 + 10, duration: 1, ease: "power3.inOut" }, "<");
@@ -176,7 +176,7 @@ export default function mpnn(root) {
   });
   pause(tl);
 
-  // Readout : tous les embeddings de nœuds s'agrègent en un seul.
+  // Readout: every node embedding is aggregated into a single one.
   tl.from([m.readout, m.readoutName], { opacity: 0, y: 12, duration: 0.7, stagger: 0.1 });
   tl.from(m.graphText, { opacity: 0, x: -16, duration: 0.6 }, "<0.1");
   tl.fromTo(pooled, { opacity: 0 }, { opacity: 1, duration: 0.1, immediateRender: false }, ">");

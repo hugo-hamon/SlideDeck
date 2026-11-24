@@ -26,26 +26,26 @@ OUT_OF_FRAME_JS = """() => {
 
 
 def parse_args() -> argparse.Namespace:
-    """Lit les options de capture."""
-    parser = argparse.ArgumentParser(description="Capturer chaque étape d'un deck web.")
+    """Reads the capture options."""
+    parser = argparse.ArgumentParser(description="Capture every step of a web deck.")
     parser.add_argument(
-        "project", type=Path, help="dossier de la présentation, ex. presentations/2026/demo"
+        "project", type=Path, help="presentation folder, e.g. presentations/2026/demo"
     )
-    parser.add_argument("--slide", type=int, help="ne capturer que cette slide (à partir de 1)")
+    parser.add_argument("--slide", type=int, help="capture only this slide (from 1)")
     parser.add_argument(
         "--frames",
         type=int,
         default=0,
-        help="images intermédiaires par étape, pour juger le mouvement",
+        help="in-between frames per step, to judge the motion",
     )
-    parser.add_argument("-o", "--output", type=Path, help="dossier des résultats")
+    parser.add_argument("-o", "--output", type=Path, help="output folder")
     return parser.parse_args()
 
 
 class QuietHandler(SimpleHTTPRequestHandler):
-    """Sert le dépôt sans journal ; 204 sur /__reload coupe le rechargement automatique.
+    """Serves the repository without logs, answering 204 on /__reload to disable live reload.
 
-    Les retours du mode Édition restent lisibles (tools/review.py les affiche).
+    Edit-mode feedback stays readable (tools/review.py displays it).
     """
 
     def do_GET(self) -> None:
@@ -62,7 +62,7 @@ class QuietHandler(SimpleHTTPRequestHandler):
 
 
 def serve() -> ThreadingHTTPServer:
-    """Sert le dépôt sur un port libre, le temps de la capture."""
+    """Serves the repository on a free port, for the duration of the capture."""
     handler = partial(QuietHandler, directory=str(ROOT))
     server = ThreadingHTTPServer(("127.0.0.1", 0), handler)
     threading.Thread(target=server.serve_forever, daemon=True).start()
@@ -76,7 +76,7 @@ def capture(page: Page, slide: int, step: int, fraction: float, path: Path) -> N
 
 
 def storyboard(shots: list[tuple[str, Path]], path: Path) -> None:
-    """Assemble les captures dans une planche légendée, dans l'ordre de présentation."""
+    """Assembles the captures into a captioned contact sheet, in presentation order."""
     rows = -(-len(shots) // COLUMNS)
     sheet = Image.new("RGB", (TILE[0] * COLUMNS, (TILE[1] + LABEL_HEIGHT) * rows), "#20242c")
     draw = ImageDraw.Draw(sheet)
@@ -118,10 +118,10 @@ def main() -> None:
                     fraction = k / (args.frames + 1)
                     path = output / f"s{slide:02d}-e{step:02d}-{round(fraction * 100):02d}.png"
                     capture(page, slide, step, fraction, path)
-                    shots.append((f"{slide}.{step} à {fraction:.0%}", path))
+                    shots.append((f"{slide}.{step} at {fraction:.0%}", path))
                 path = output / f"s{slide:02d}-e{step:02d}.png"
                 capture(page, slide, step, 1, path)
-                shots.append((f"slide {slide} · étape {step}", path))
+                shots.append((f"slide {slide} · step {step}", path))
                 report["steps"].append(
                     {
                         "slide": slide,

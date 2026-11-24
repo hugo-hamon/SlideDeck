@@ -7,13 +7,13 @@ TEMPLATE = ROOT / "templates" / "presentation"
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Créer une présentation depuis le modèle.")
-    parser.add_argument("path", type=Path, help="ex. presentations/2026/mon_cours")
-    parser.add_argument("--title", help="titre affiché (par défaut : nom du dossier)")
+    parser = argparse.ArgumentParser(description="Create a presentation from the template.")
+    parser.add_argument("path", type=Path, help="e.g. presentations/2026/my_course")
+    parser.add_argument("--title", help="displayed title (default: folder name)")
     args = parser.parse_args()
     target = (ROOT / args.path).resolve()
     if target.exists():
-        raise SystemExit(f"{target} existe déjà")
+        raise SystemExit(f"{target} already exists")
     title = args.title or target.name.replace("_", " ").capitalize()
     shutil.copytree(TEMPLATE, target)
     for file in target.rglob("*"):

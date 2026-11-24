@@ -8,7 +8,7 @@ const yes = `<span class="c-green">✓</span>`;
 const no = `<span class="c-red">✗</span>`;
 const t = (e) => tex(e);
 
-/* family : 0 sélection de nœuds, 1 affectation souple, 2 affectation dure (regroupement). */
+/* family: 0 node selection, 1 soft assignment, 2 hard assignment (grouping). */
 const ROWS = [
   {
     family: 0, studied: true, name: "Top-k", ref: "Gao &amp; Ji, 2019",
@@ -52,7 +52,7 @@ function row(root, html, y, extra = {}) {
 }
 const cell = (html, style = "") => `<div style="padding: 0 12px; line-height: 30px; ${style}">${html}</div>`;
 
-/** Grand tableau : les méthodes de la littérature décrites dans le cadre SRC. */
+/** Large table: the methods of the literature described in the SRC framework. */
 export default function taxonomy(root) {
   const heading = title(root, "Toutes les méthodes rentrent dans le cadre SRC", 64);
   const head = row(root, HEAD.map((h, i) => cell(h, `font-weight: 600; ${i >= 4 ? "text-align: center" : ""}`)).join(""), TABLE.y, {
@@ -91,14 +91,14 @@ export default function taxonomy(root) {
   tl.from(legend, { opacity: 0, duration: 0.6 }, "<0.2");
   pause(tl);
 
-  // Une ligne par arrêt : la méthode entre dans le tableau.
+  // One row per stop: the method enters the table.
   rows.forEach((node, i) => {
     tl.from(node, { opacity: 0, x: -30, duration: 0.7 });
     if (i === rows.length - 1) tl.from(note, { opacity: 0, duration: 0.6 }, "<0.3");
     pause(tl);
   });
 
-  // Les quatre méthodes détaillées dans la suite.
+  // The four methods detailed next.
   tl.to(rows.filter((_, i) => !ROWS[i].studied), { opacity: 0.3, duration: 0.6, ease: "power2.inOut" });
   tl.to(note, { opacity: 0, duration: 0.3, ease: "power2.in" }, "<");
   tl.fromTo(next, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.6, immediateRender: false }, "<0.3");

@@ -9,7 +9,7 @@ const SUPERVISORS = [["Sébastien Adam", 470], ["Maxime Berar", 960], ["Florian 
 const SUPERVISOR_Y = 800;
 const NODE_R = 17;
 
-/** Arête du graphe ego, arrêtée avant les deux nœuds. */
+/** Edge of the ego graph, stopped before both nodes. */
 function edge(parent, a, b, gap = 30) {
   const d = Math.hypot(b.x - a.x, b.y - a.y);
   const [ux, uy] = [(b.x - a.x) / d, (b.y - a.y) / d];
@@ -22,7 +22,7 @@ function edge(parent, a, b, gap = 30) {
 const node = (parent, { x, y }, color) =>
   svg(parent, "circle", { cx: x, cy: y, r: NODE_R, style: `fill: ${color}; stroke: var(--paper); stroke-width: 3` });
 
-/** L'orateur est la racine de son voisinage à un saut : laboratoire, thèse, encadrants. */
+/** The speaker is the root of their one-hop neighbourhood: lab, thesis, supervisors. */
 export default function thesis(root) {
   const heading = title(root, `Ma thèse <img src="assets/eyes.svg" alt="" style="height: 0.8em; vertical-align: -0.08em">`);
   const layer = canvas(root);

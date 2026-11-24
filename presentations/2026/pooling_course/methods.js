@@ -3,18 +3,18 @@ import { COLORS, div, label, svg, tex } from "deck/components.js";
 import { MPNN_EDGES, embeddingColors, line, mix, mpnnGraph, theme } from "./helpers.js";
 
 /*
- * Outils communs aux slides SRC et méthodes : le graphe à 8 nœuds du rappel MPNN, un même
- * jeu de scores (Top-k, MIVSPool) et le bandeau SEL → RED → CON.
+ * Tools shared by the SRC and method slides: the 8-node graph of the MPNN recap, a common
+ * set of scores (Top-k, MIVSPool) and the SEL → RED → CON stepper.
  */
 export const EDGES = MPNN_EDGES;
 export const N = 8;
-/** Scores des nœuds, partagés par Top-k et MIVSPool pour comparer les sélections. */
+/** Node scores, shared by Top-k and MIVSPool to compare their selections. */
 export const SCORES = [0.92, 0.58, 0.41, 0.33, 0.71, 0.27, 0.8, 0.49];
-/** Communautés « naturelles » du graphe : {1, 2, 3}, {4, 5, 8}, {6, 7}. */
+/** "Natural" communities of the graph: {1, 2, 3}, {4, 5, 8}, {6, 7}. */
 export const GROUPS = [0, 0, 0, 1, 1, 2, 2, 1];
 export const neighborsOf = (i) => EDGES.filter((e) => e.includes(i)).map(([a, b]) => (a === i ? b : a));
 
-/** Graphe numéroté de 1 à 8 ; couleurs = attributs X (mêmes couleurs que le rappel MPNN). */
+/** Graph numbered 1 to 8; colours = attributes X (same colours as the MPNN recap). */
 export function drawGraph(layer, { scale = 190, origin = [430, 575], r = 24 } = {}) {
   const points = mpnnGraph(scale, origin);
   const colors = embeddingColors(N);
@@ -30,7 +30,7 @@ export function drawGraph(layer, { scale = 190, origin = [430, 575], r = 24 } = 
   return { points, colors, edges, nodes, groups: nodes.map((n) => n.group), dots: nodes.map((n) => n.dot) };
 }
 
-/** Bandeau des trois étapes ; `focus(tl, k, position)` met l'étape k en avant (−1 : aucune). */
+/** Stepper of the three stages, where `focus(tl, k, position)` highlights stage k (−1: none). */
 export function stepper(root, y = 205) {
   const names = [["SEL", "sélection"], ["RED", "réduction"], ["CON", "connexion"]];
   const items = names.map(([short, long], k) => {
@@ -50,12 +50,12 @@ export function stepper(root, y = 205) {
   return { items, arrows, all: [...items, ...arrows], focus };
 }
 
-/** Référence bibliographique en bas à gauche. */
+/** Bibliographic reference, bottom left. */
 export function cite(root, html) {
   return div(root, "abs muted", { x: 120, y: 958, html, style: { fontSize: "24px" } });
 }
 
-/** Ligne de bilan : avantages et limites côte à côte. */
+/** Verdict line: strengths and limits side by side. */
 export function verdict(root, good, bad, y = 910) {
   return [
     label(root, `<span class="c-green">✓</span> ${good}`, 560, y, 32),
@@ -65,8 +65,8 @@ export function verdict(root, good, bad, y = 910) {
 
 
 /**
- * Matrice de cellules (lignes = nœuds, colonnes = super-nœuds) dont l'opacité de remplissage
- * code la valeur. Les en-têtes sont des numéros de nœuds et des pastilles de couleur.
+ * Grid of cells (rows = nodes, columns = super-nodes) whose fill opacity encodes the
+ * value. Headers are node numbers and colour dots.
  */
 export function matrix(root, layer, { x, y, rows, cols, w = 64, h = 40, rowNames = true }) {
   const cells = Array.from({ length: rows }, (_, i) =>
@@ -84,7 +84,7 @@ export function matrix(root, layer, { x, y, rows, cols, w = 64, h = 40, rowNames
   return { cells, heads, names, frame: [...cells.flat(), ...heads, ...names] };
 }
 
-/** Formule centrée, au-dessus de la zone de travail. */
+/** Centred formula, above the working area. */
 export function formula(root, expression, x = 960, y = 292, size = 36) {
   return label(root, tex(expression), x, y, size);
 }

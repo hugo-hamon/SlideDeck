@@ -11,7 +11,7 @@ const GAUGE = { x: 1180, y: 660, w: 560, h: 34 };
 const SUPER_R = 34;
 const fr = (v, d = 2) => v.toFixed(d).replace(".", ",");
 
-/* Affectation initiale (presque uniforme, graine fixe) et affectation apprise (nette). */
+/* Initial assignment (almost uniform, fixed seed) and learned assignment (crisp). */
 const random = seeded(7);
 const START = Array.from({ length: N }, () => {
   const logits = [0, 1, 2].map(() => 0.5 * random());
@@ -21,11 +21,11 @@ const START = Array.from({ length: N }, () => {
 const END = GROUPS.map((g) => [0, 1, 2].map((k) => (k === g ? 0.92 : 0.04)));
 const blend = (t) => START.map((row, i) => row.map((v, k) => (1 - t) * v + t * END[i][k]));
 
-/* Ã = D^{-1/2} A D^{-1/2}, comme dans l'article. */
+/* Ã = D^{-1/2} A D^{-1/2}, as in the paper. */
 const degree = Array.from({ length: N }, (_, i) => EDGES.filter((e) => e.includes(i)).length);
 const NORMALIZED = EDGES.map(([a, b]) => 1 / Math.sqrt(degree[a] * degree[b]));
 
-/** A′ = SᵀÃS (matrice K × K). */
+/** A′ = SᵀÃS (K × K matrix). */
 function coarsen(S) {
   const out = Array.from({ length: K }, () => Array(K).fill(0));
   EDGES.forEach(([a, b], e) => {
@@ -34,7 +34,7 @@ function coarsen(S) {
   return out;
 }
 
-/** Pertes de MinCutPool : coupe ℒc = −Tr(SᵀÃS)/Tr(SᵀD̃S) et orthogonalité ℒo. */
+/** MinCutPool losses: cut ℒc = −Tr(SᵀÃS)/Tr(SᵀD̃S) and orthogonality ℒo. */
 function losses(S) {
   const pooled = coarsen(S);
   const deg = Array(N).fill(0);
@@ -53,7 +53,7 @@ function losses(S) {
 
 const matrixTex = (m) => String.raw`\begin{bmatrix} ${m.map((r) => r.map((v) => fr(v, 1)).join(" & ")).join(String.raw` \\ `)} \end{bmatrix}`;
 
-/** MinCutPool : S appris par une perte de coupe minimale ; A′ sans boucles et normalisée. */
+/** MinCutPool: S is learned through a minimum-cut loss, and A′ loses its self-loops before being normalised. */
 export default function mincut(root) {
   const heading = title(root, "MinCutPool");
   const steps = stepper(root);
@@ -64,7 +64,7 @@ export default function mincut(root) {
   const ref = cite(root, "Bianchi, Grattarola, Alippi — <i>Spectral Clustering with Graph Neural Networks for Graph Pooling</i>, ICML 2020");
   const [blue, green, red, ink, paper] = ["blue", "green", "red", "ink-soft", "paper"].map(theme);
 
-  // Anneau d'appartenance de chaque nœud : mélange des couleurs des groupes, pondéré par sa ligne de S.
+  // Membership ring of each node: mix of the group colours, weighted by its row of S.
   const ringColor = (row) => mix([blue, green, red, paper], [...row.map((v) => v * v), 0.15]);
   const rings = points.map(({ x, y }, i) => svg(layer, "circle", { cx: x, cy: y, r: 31, style: `fill: none; stroke: ${ringColor(START[i])}; stroke-width: 7` }));
   graph.groups.forEach((g) => layer.appendChild(g));
@@ -72,7 +72,7 @@ export default function mincut(root) {
   START.forEach((row, i) => row.forEach((v, k) => S.cells[i][k].setAttribute("fill-opacity", 0.9 * v)));
   const sName = label(root, tex(String.raw`S \in \mathbb{R}^{8 \times 3}`), CELL.x + (K * CELL.w) / 2 - 3, CELL.y + N * CELL.h + 34, 32);
 
-  // Pertes : formules et jauge de la perte totale.
+  // Losses: formulas and gauge of the total loss.
   const lossTex = [
     label(root, `${tex(String.raw`\mathcal{L}_c = -\dfrac{\mathrm{Tr}(S^\top \tilde{A} S)}{\mathrm{Tr}(S^\top \tilde{D} S)}`)}<br><span class="muted" style="font-size: 26px">peu d’arêtes coupées entre groupes</span>`, 1460, 395, 30),
     label(root, `${tex(String.raw`\mathcal{L}_o = \Big\lVert \tfrac{S^\top S}{\lVert S^\top S \rVert_F} - \tfrac{I_K}{\sqrt{K}} \Big\rVert_F`)}<br><span class="muted" style="font-size: 26px">groupes distincts et équilibrés</span>`, 1460, 540, 30),
@@ -85,7 +85,7 @@ export default function mincut(root) {
   const gaugeName = label(root, `${tex(String.raw`\mathcal{L}_c + \mathcal{L}_o`)}`, GAUGE.x - 70, GAUGE.y + GAUGE.h / 2, 30);
   const training = label(root, "entraînement →", GAUGE.x + GAUGE.w / 2, GAUGE.y + 70, 28, "abs muted");
 
-  // Graphe réduit : super-nœuds au centre de chaque groupe, boucles (diagonale de A′) et arêtes.
+  // Coarse graph: super-nodes at each group's centre, self-loops (diagonal of A′) and edges.
   const members = [0, 1, 2].map((c) => points.filter((_, i) => GROUPS[i] === c));
   const centers = members.map((ps) => ({ x: ps.reduce((s, p) => s + p.x, 0) / ps.length, y: ps.reduce((s, p) => s + p.y, 0) / ps.length }));
   const pairs = [[0, 1], [0, 2], [1, 2]];
@@ -96,7 +96,7 @@ export default function mincut(root) {
   const supers = centers.map(({ x, y }, k) => svg(layer, "circle", { cx: x, cy: y, r: SUPER_R, style: `fill: ${COLORS[k]}; stroke: var(--paper); stroke-width: 4` }));
   gsap.set(supers, { scale: 0, transformOrigin: "50% 50%" });
 
-  // Les trois étapes de CON sur A′.
+  // The three CON stages on A′.
   const zero = finalA.map((r, k) => r.map((v, l) => (k === l ? 0 : v)));
   const d = zero.map((r) => r.reduce((s, v) => s + v, 0));
   const normalized = zero.map((r, k) => r.map((v, l) => v / Math.sqrt(d[k] * d[l])));
@@ -127,7 +127,7 @@ export default function mincut(root) {
   tl.from(ref, { opacity: 0, duration: 0.6 }, "<");
   pause(tl);
 
-  // SEL (1) : un simple MLP donne une affectation souple, d'abord floue.
+  // SEL (1): a simple MLP gives a soft assignment, blurry at first.
   tl.addLabel("sel");
   steps.focus(tl, 0, "sel");
   show(formulas[0], "sel+=0.2");
@@ -138,7 +138,7 @@ export default function mincut(root) {
   tl.from([gaugeBack, gauge, gaugeName], { opacity: 0, duration: 0.5 }, "sel+=1.5");
   pause(tl);
 
-  // SEL (2) : l'entraînement rend S net ; les arêtes coupées se réduisent aux ponts.
+  // SEL (2): training makes S crisp and the cut edges shrink to the bridges.
   tl.addLabel("train");
   tl.from(training, { opacity: 0, x: -20, duration: 0.5 }, "train");
   FRAMES.slice(1).forEach((t, f) => {
@@ -159,7 +159,7 @@ export default function mincut(root) {
   tl.to(training, { opacity: 0, duration: 0.4 }, ">");
   pause(tl);
 
-  // RED : chaque groupe se contracte en un super-nœud.
+  // RED: each group contracts into a super-node.
   tl.addLabel("red");
   steps.focus(tl, 1, "red");
   hide(formulas[0], "red");
@@ -178,7 +178,7 @@ export default function mincut(root) {
   tl.to([...graph.groups, ...rings], { opacity: 0, duration: 0.3 }, "red+=1.4");
   pause(tl);
 
-  // CON : SᵀÃS a de fortes boucles ; MinCutPool les retire puis normalise.
+  // CON: SᵀÃS has strong self-loops, which MinCutPool removes before normalising.
   tl.addLabel("con");
   steps.focus(tl, 2, "con");
   hide(formulas[1], "con");

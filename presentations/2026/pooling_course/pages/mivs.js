@@ -9,7 +9,7 @@ const SUPER_R = 34;
 const STEP = 1.3;
 const fr = (v) => v.toFixed(2).replace(".", ",");
 
-/** Ensemble indépendant maximal glouton : le meilleur candidat survit, ses voisins sont retirés. */
+/** Greedy maximal independent set: the best candidate survives, its neighbours are removed. */
 function mivs() {
   const order = [...SCORES.keys()].sort((a, b) => SCORES[b] - SCORES[a]);
   const candidate = new Set(order);
@@ -24,7 +24,7 @@ function mivs() {
   return { order, rounds, survivors: rounds.map((r) => r.survivor) };
 }
 
-/** MIVSPool : survivants = ensemble indépendant maximal ; chaque autre nœud rejoint un survivant voisin. */
+/** MIVSPool: the survivors form a maximal independent set and every other node joins a neighbouring survivor. */
 export default function mivsPool(root) {
   const heading = title(root, "MIVSPool");
   const steps = stepper(root);
@@ -37,12 +37,12 @@ export default function mivsPool(root) {
   const [red, lineColor, panel] = ["red", "line", "panel"].map(theme);
 
   const { order, rounds, survivors } = mivs();
-  // Chaque survivant prend la couleur de sa communauté, comme sur les autres slides.
+  // Each survivor takes its community's colour, as on the other slides.
   const color = (v) => GROUPS[v];
-  // Chaque non-survivant rejoint le survivant voisin de plus haut score.
+  // Each non-survivor joins the neighbouring survivor with the highest score.
   const owner = SCORES.map((_, v) => (survivors.includes(v) ? v : neighborsOf(v).filter((u) => survivors.includes(u)).sort((a, b) => SCORES[b] - SCORES[a])[0]));
 
-  // Scores près des nœuds et liste triée des candidats.
+  // Scores next to the nodes and sorted list of candidates.
   const scoreTags = points.map(({ x, y }, i) => label(root, fr(SCORES[i]), x, y - 46, 26, "abs muted"));
   const chips = order.map((v, r) =>
     div(root, "abs", {
@@ -110,7 +110,7 @@ export default function mivsPool(root) {
   tl.from(ref, { opacity: 0, duration: 0.6 }, "<");
   pause(tl);
 
-  // SEL (1) : un score par nœud, les candidats sont triés.
+  // SEL (1): one score per node, candidates are sorted.
   tl.addLabel("score");
   steps.focus(tl, 0, "score");
   show(formulas[0], "score+=0.2");
@@ -120,7 +120,7 @@ export default function mivsPool(root) {
   tl.from(rules, { opacity: 0, x: 20, duration: 0.6 }, "score+=1.1");
   pause(tl);
 
-  // SEL (2) : survivants gloutons ; les voisins d'un survivant sont retirés.
+  // SEL (2): greedy survivors, whose neighbours are removed.
   tl.addLabel("mivs");
   rounds.forEach(({ survivor, removed }, r) => {
     const at = (offset) => `mivs+=${r * STEP + offset}`;
@@ -141,7 +141,7 @@ export default function mivsPool(root) {
   tl.from(properties, { opacity: 0, x: 20, duration: 0.6 }, `mivs+=${rounds.length * STEP + 0.2}`);
   pause(tl);
 
-  // SEL (3) : chaque nœud retiré rejoint son survivant voisin de plus haut score.
+  // SEL (3): each removed node joins its neighbouring survivor with the highest score.
   tl.addLabel("assign");
   tl.to([...chips, ...strikes, listName, properties, ...scoreTags], { opacity: 0, duration: 0.4 }, "assign");
   tl.to(graph.groups, { opacity: 1, duration: 0.4 }, "assign+=0.2");
@@ -154,7 +154,7 @@ export default function mivsPool(root) {
   show(kNote, "assign+=1.6");
   pause(tl);
 
-  // RED : les nœuds rattachés se fondent dans leur survivant, qui garde sa place.
+  // RED: attached nodes merge into their survivor, which keeps its place.
   tl.addLabel("red");
   steps.focus(tl, 1, "red");
   hide(formulas[0], "red");
@@ -173,7 +173,7 @@ export default function mivsPool(root) {
   tl.to([...graph.groups, ...rings], { opacity: 0, duration: 0.3 }, "red+=1.4");
   pause(tl);
 
-  // CON : deux survivants sont reliés si leurs groupes se touchent.
+  // CON: two survivors are linked if their groups touch.
   tl.addLabel("con");
   steps.focus(tl, 2, "con");
   hide(formulas[1], "con");

@@ -7,14 +7,14 @@ const FINE = network(120, [480, 470]);
 const COARSE = network(120, [1440, 470]);
 const TEXT_Y = 770;
 
-/** Le pooling rend abordable un modèle 3-WL : 21³ triplets avant, 3³ après. */
+/** Pooling makes a 3-WL model affordable: 21³ triplets before, 3³ after. */
 export default function motivation(root) {
   const heading = title(root, "Pourquoi le pooling dans ma thèse ?");
   const layer = canvas(root);
   const fine = drawNetwork(svg(layer, "g"), FINE, { r: 12 });
   const coarseLayer = svg(layer, "g");
   const coarse = drawCoarse(coarseLayer, COARSE, { r: 34 });
-  // Copie du graphe fin qui glisse à droite et se contracte en communautés.
+  // Copy of the fine graph that slides to the right and contracts into communities.
   const ghost = drawNetwork(svg(layer, "g"), FINE, { r: 12 });
   gsap.set([...ghost.nodes, ...ghost.edges], { opacity: 0 });
 

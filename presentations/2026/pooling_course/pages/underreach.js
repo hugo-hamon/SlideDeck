@@ -3,7 +3,7 @@ import { pause } from "deck/deck.js";
 import { FILLS, canvas, label, svg, tex, title } from "deck/components.js";
 import { flash, hops, line, swap, theme, versus } from "../helpers.js";
 
-/* Chaîne de 4 communautés en losange : e (entrée), t, b, o (sortie). s = e₀ à gauche, t = o₃ à droite. */
+/* Chain of 4 diamond communities: e (entry), t, b, o (exit). s = e₀ on the left, t = o₃ on the right. */
 const CLUSTERS = 4;
 const LINKS = [];
 for (let c = 0; c < CLUSTERS; c++) {
@@ -30,7 +30,7 @@ function layout(panel) {
   return { nodes, supers, y };
 }
 
-/** Graphe fin : arêtes, halos de portée (cachés), nœuds. */
+/** Fine graph: edges, reach halos (hidden), nodes. */
 function drawChain(layer, { nodes }) {
   const halos = svg(layer, "g");
   const edgeLayer = svg(layer, "g");
@@ -40,7 +40,7 @@ function drawChain(layer, { nodes }) {
   return { edges, halo, dots };
 }
 
-/** Règle de mesure sous le graphe, avec la distance en sauts. */
+/** Measuring ruler under the graph, with the hop distance. */
 function ruler(root, layer, a, b, y, html) {
   const group = svg(layer, "g");
   const style = "stroke: var(--ink); stroke-width: 2";
@@ -50,7 +50,7 @@ function ruler(root, layer, a, b, y, html) {
   return { group, text: label(root, html, (a + b) / 2, y + 40, 36) };
 }
 
-/** Under-reaching : avec K couches, s ne voit que K sauts ; le graphe réduit raccourcit les distances. */
+/** Under-reaching: with K layers t only sees K hops, and the coarse graph shortens distances. */
 export default function underreach(root) {
   const heading = title(root, "Under-reaching");
   const panels = versus(root, [["MPNN", "graphe d’origine"], ["MPNN + pooling", "graphe réduit"]]);
@@ -63,7 +63,7 @@ export default function underreach(root) {
   const graphs = geo.map((g) => drawChain(layer, g));
   const flashes = svg(layer, "g");
 
-  // Graphe réduit du panneau droit : quatre super-nœuds en chaîne.
+  // Coarse graph of the right panel: four super-nodes in a chain.
   const right = geo[1];
   const hulls = right.supers.map(({ x, y }) =>
     svg(hullLayer, "ellipse", { cx: x, cy: y, rx: 96, ry: 112, style: `fill: ${FILLS[0]}; fill-opacity: 0.4; stroke: var(--ink-soft); stroke-width: 2; stroke-dasharray: 8 6` }),
@@ -72,7 +72,7 @@ export default function underreach(root) {
   const coarseEdges = COARSE_LINKS.map(([a, b]) => line(coarseLayer, right.supers[a], right.supers[b], `stroke: ${ink}`, { "stroke-width": 4, "stroke-opacity": 1 }));
   const supers = right.supers.map(({ x, y }) => svg(coarseLayer, "circle", { cx: x, cy: y, r: SUPER_R, style: `fill: ${ink}; stroke: var(--paper); stroke-width: 4` }));
 
-  // s et u : anneaux et étiquettes, sur les deux panneaux.
+  // s and t: rings and labels, on both panels.
   const marks = geo.map(({ nodes }) => ({
     sRing: svg(layer, "circle", { cx: nodes[S].x, cy: nodes[S].y, r: 22, style: `fill: none; stroke: ${red}; stroke-width: 3.5` }),
     uRing: svg(layer, "circle", { cx: nodes[U].x, cy: nodes[U].y, r: 22, style: `fill: none; stroke: ${blue}; stroke-width: 3.5` }),
@@ -99,7 +99,7 @@ export default function underreach(root) {
   gsap.set([...graphs.flatMap((g) => g.halo), ...coarseHalo], { scale: 0, transformOrigin: "50% 50%" });
   gsap.set(coarseLayer, { opacity: 0 });
 
-  // 1. Deux copies du même graphe en chaîne ; s et u aux extrémités.
+  // 1. Two copies of the same chain graph, with s and t at the ends.
   tl.from(heading, { opacity: 0, y: 24, duration: 0.8 });
   tl.from(panels.map((p) => p.frame), { opacity: 0, scale: 0.98, duration: 0.7, stagger: 0.1 }, "<0.1");
   tl.from(panels.map((p) => p.head), { opacity: 0, x: -16, duration: 0.6, stagger: 0.1 }, "<0.2");
@@ -109,7 +109,7 @@ export default function underreach(root) {
   tl.from([...marks.flatMap((m) => [m.sName, m.uName]), legend, ...kTags.map((t) => t[0])], { opacity: 0, y: 10, duration: 0.5, stagger: 0.04 }, "<0.1");
   pause(tl);
 
-  // 2. Mesure des distances ; à droite, chaque communauté devient un super-nœud.
+  // 2. Distance measurement, then on the right each community becomes a super-node.
   tl.addLabel("pool");
   tl.from(rulers[0].group, { opacity: 0, scaleX: 0, transformOrigin: "100% 50%", duration: 0.8, ease: "power3.inOut" }, "pool");
   tl.from(rulers[0].text, { opacity: 0, y: 10, duration: 0.6 }, "pool+=0.5");
@@ -134,7 +134,7 @@ export default function underreach(root) {
   tl.from(rulers[1].text, { opacity: 0, y: 10, duration: 0.6 }, "pool+=2.1");
   pause(tl);
 
-  // 3–5. Chaque couche élargit la portée d'un saut, sur les deux graphes en même temps.
+  // 3–5. Each layer extends the reach by one hop, on both graphs at the same time.
   const sides = [
     { dist: fineDist, links: LINKS, points: geo[0].nodes, halo: graphs[0].halo, dots: graphs[0].dots, edges: graphs[0].edges },
     { dist: coarseDist, links: COARSE_LINKS, points: right.supers, halo: coarseHalo, dots: supers, edges: coarseEdges },
@@ -142,7 +142,7 @@ export default function underreach(root) {
   for (let k = 1; k <= LAYERS; k++) {
     tl.addLabel(`k${k}`);
     if (k === 1) {
-      // La couche 0 : t lui-même.
+      // Layer 0: t itself.
       sides.forEach(({ halo, dots }, i) => {
         const first = i === 0 ? U : CLUSTERS - 1;
         tl.to(halo[first], { scale: 1, duration: 0.5, ease: "back.out(2)" }, "k1");
@@ -154,7 +154,7 @@ export default function underreach(root) {
       links.forEach(([a, b], e) => {
         const [near, far] = dist[a] < dist[b] ? [a, b] : [b, a];
         if (dist[far] !== k || dist[near] !== k - 1) return;
-        // La portée de t avance : le trait part du nœud déjà atteint.
+        // t's reach grows: the stroke starts from the node already reached.
         flash(flashes, points[near], points[far], blue, tl, `k${k}+=0.2`, 0.7);
         tl.to(edges[e], { stroke: blue, attr: { "stroke-opacity": 1 }, duration: 0.4 }, `k${k}+=0.6`);
       });

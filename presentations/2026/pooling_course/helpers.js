@@ -1,7 +1,7 @@
 import { gsap } from "gsap";
 import { COLORS, FILLS, div, svg } from "deck/components.js";
 
-/* Graphe à 21 nœuds en trois communautés, repris de la version Manim (helpers.py). */
+/* 21-node graph in three communities, taken from the Manim version (helpers.py). */
 const CENTERS = [[-1.25, 0.7], [1.25, 0.65], [0, -1.15]];
 const OFFSETS = [[-0.8, 0.15], [-0.35, 0.75], [0.45, 0.6], [0.9, -0.1], [0.4, -0.65], [-0.5, -0.55], [0.05, 0.05]];
 const COMMUNITY_EDGES = [
@@ -14,7 +14,7 @@ export const INTERNAL = COMMUNITY_EDGES.flatMap((edges, c) => edges.map(([a, b])
 export const LINKS = [...INTERNAL, ...BRIDGES];
 export const COARSE_LINKS = [[0, 1], [0, 2], [1, 2]];
 
-/** Positions en pixels du graphe : `scale` px par unité Manim, centré sur `center`. */
+/** Pixel positions of the graph: `scale` px per Manim unit, centred on `center`. */
 export function network(scale, [ox, oy]) {
   const nodes = CENTERS.flatMap(([cx, cy], c) =>
     OFFSETS.map(([dx, dy], j) => ({
@@ -34,7 +34,7 @@ export function network(scale, [ox, oy]) {
 export const line = (parent, a, b, style, attrs = {}) =>
   svg(parent, "line", { x1: a.x, y1: a.y, x2: b.x, y2: b.y, style, ...attrs });
 
-/** Dessine le graphe fin ; opacité et épaisseur sont des attributs pour pouvoir les animer. */
+/** Draws the fine graph, with opacity and width as attributes so that they can be animated. */
 export function drawNetwork(parent, net, { r = 13 } = {}) {
   const edges = svg(parent, "g");
   const nodeLayer = svg(parent, "g");
@@ -50,7 +50,7 @@ export function drawNetwork(parent, net, { r = 13 } = {}) {
   return { internal, bridges, nodes, edges: [...internal, ...bridges] };
 }
 
-/** Graphe réduit : trois super-nœuds reliés par des arêtes d'épaisseur proportionnelle au nombre de ponts. */
+/** Coarse graph: three super-nodes linked by edges whose width grows with the number of bridges. */
 export function drawCoarse(parent, net, { r = 34 } = {}) {
   const edgeLayer = svg(parent, "g");
   const edges = COARSE_LINKS.map(([a, b], k) =>
@@ -62,12 +62,12 @@ export function drawCoarse(parent, net, { r = 34 } = {}) {
   return { edges, supers };
 }
 
-/** Rend un attribut fonction arbitraire du temps : l'« ease » renvoie directement la valeur. */
+/** Makes an attribute an arbitrary function of time: the "ease" returns the value directly. */
 export function follow(tl, target, attr, fn, duration, position) {
   return tl.fromTo(target, { attr: { [attr]: 0 } }, { attr: { [attr]: 1 }, ease: fn, duration, immediateRender: false }, position);
 }
 
-/** Générateur pseudo-aléatoire à graine fixe (mulberry32) : trajectoires reproductibles. */
+/** Seeded pseudo-random generator (mulberry32): reproducible trajectories. */
 export function seeded(seed) {
   let a = seed >>> 0;
   return () => {
@@ -83,7 +83,7 @@ export const smooth = (t) => {
   return u * u * u * (u * (6 * u - 15) + 10);
 };
 
-/** Voisinage induit à un saut, copié dans un groupe, avec un anneau sur la racine. */
+/** One-hop induced neighbourhood, copied into a group, with a ring on the root. */
 export function ego(parent, net, index, links = LINKS) {
   const members = new Set([index]);
   for (const [a, b] of links) if (a === index || b === index) members.add(a === index ? b : a);
@@ -100,7 +100,7 @@ export function ego(parent, net, index, links = LINKS) {
   return { group, box: bounds([...members].map((i) => net.nodes[i]), 19) };
 }
 
-/** Nœuds et arêtes internes d'une communauté, dans sa couleur. */
+/** Nodes and internal edges of a community, in its colour. */
 export function cluster(parent, net, c) {
   const group = svg(parent, "g");
   for (const [a, b] of INTERNAL) {
@@ -118,13 +118,13 @@ export function bounds(points, pad = 0) {
   return { x: (x0 + x1) / 2, y: (y0 + y1) / 2, w: x1 - x0, h: y1 - y0 };
 }
 
-/** Place un groupe SVG : son cadre `box` est centré en (x, y) avec la largeur ou hauteur voulue. */
+/** Places an SVG group: its `box` is centred on (x, y) with the requested width or height. */
 export function fit(box, { x, y, w, h }) {
   const scale = w ? w / box.w : h / box.h;
   return { x: x - box.x, y: y - box.y, scale, svgOrigin: `${box.x} ${box.y}` };
 }
 
-/** Couleur résolue d'un jeton du thème (GSAP n'interpole pas les var(--…)). */
+/** Resolved colour of a theme token (GSAP cannot interpolate var(--…)). */
 export function theme(name) {
   return getComputedStyle(document.documentElement).getPropertyValue(`--${name}`).trim();
 }
@@ -132,7 +132,7 @@ export function theme(name) {
 const rgb = (color) =>
   color.startsWith("#") ? [1, 3, 5].map((i) => parseInt(color.slice(i, i + 2), 16)) : color.match(/[\d.]+/g).slice(0, 3).map(Number);
 
-/** Mélange pondéré de couleurs (« #rrggbb » ou « rgb(…) »), renvoyé en « rgb(…) ». */
+/** Weighted mix of colours ("#rrggbb" or "rgb(…)"), returned as "rgb(…)". */
 export function mix(colors, weights = colors.map(() => 1)) {
   const total = weights.reduce((s, w) => s + w, 0);
   const parts = colors.map(rgb);
@@ -140,7 +140,7 @@ export function mix(colors, weights = colors.map(() => 1)) {
   return `rgb(${out.join(", ")})`;
 }
 
-/** Cercle pointillé autour d'une communauté, comme une région. */
+/** Dashed circle around a community, like a region. */
 export function hull(parent, net, c, pad = 36) {
   const center = net.centroids[c];
   const reach = Math.max(...net.nodes.filter((n) => n.c === c).map((n) => Math.hypot(n.x - center.x, n.y - center.y)));
@@ -150,7 +150,7 @@ export function hull(parent, net, c, pad = 36) {
   });
 }
 
-/** Trait lumineux qui parcourt un segment de a vers b (équivalent de ShowPassingFlash). */
+/** Bright stroke running along a segment from a to b (like Manim's ShowPassingFlash). */
 export function flash(parent, a, b, color, tl, position, duration = 0.9) {
   const length = Math.hypot(b.x - a.x, b.y - a.y);
   const dash = length * 0.4;
@@ -162,7 +162,7 @@ export function flash(parent, a, b, color, tl, position, duration = 0.9) {
   return node;
 }
 
-/* Petit graphe à 8 nœuds du rappel MPNN (chapters/mpnn.py). */
+/* Small 8-node graph of the MPNN recap (chapters/mpnn.py). */
 const MPNN_POSITIONS = [[-1.0, 0.75], [-1.45, -0.35], [-0.35, 0.05], [0.45, 0.85], [1.2, 0.15], [0.75, -0.8], [-0.35, -0.95], [1.45, 1.05]];
 export const MPNN_EDGES = [[0, 1], [0, 2], [1, 2], [2, 3], [2, 6], [3, 4], [3, 7], [4, 5], [5, 6], [4, 7]];
 
@@ -172,7 +172,7 @@ export function mpnnGraph(scale, [ox, oy]) {
 
 export const neighbors = (i) => MPNN_EDGES.filter((e) => e.includes(i)).map(([a, b]) => (a === i ? b : a));
 
-/** Couleurs d'embedding : mélanges des trois couleurs du thème, répartis par le nombre d'or. */
+/** Embedding colours: mixes of the three theme colours, spread by the golden ratio. */
 export function embeddingColors(count) {
   const base = ["blue", "green", "red"].map(theme);
   return Array.from({ length: count }, (_, i) => {
@@ -183,13 +183,13 @@ export function embeddingColors(count) {
   });
 }
 
-/* ——— Comparaison côte à côte : MPNN seul à gauche, MPNN + pooling à droite. ——— */
+/* ——— Side-by-side comparison: MPNN alone on the left, MPNN + pooling on the right. ——— */
 export const PANELS = [
   { x: 100, y: 215, w: 840, h: 745 },
   { x: 980, y: 215, w: 840, h: 745 },
 ].map((p) => ({ ...p, cx: p.x + p.w / 2, cy: p.y + p.h / 2 }));
 
-/** Deux panneaux à bordure encre, avec titre et sous-titre en tête. */
+/** Two ink-bordered panels, with a title and a subtitle at the top. */
 export function versus(root, [left, right] = [["MPNN", ""], ["MPNN + pooling", ""]]) {
   return PANELS.map((p, i) => {
     const [name, note] = [left, right][i];
@@ -202,14 +202,14 @@ export function versus(root, [left, right] = [["MPNN", ""], ["MPNN + pooling", "
   });
 }
 
-/** Valeur scalaire dans [0, 1] → couleur : bleu, puis vert, puis rouge (couleurs du thème). */
+/** Scalar value in [0, 1] → colour: blue, then green, then red (theme colours). */
 export function valueColor(v) {
   const [blue, green, red] = ["blue", "green", "red"].map(theme);
   const u = Math.min(Math.max(v, 0), 1) * 2;
   return u <= 1 ? mix([blue, green], [1 - u, u]) : mix([green, red], [2 - u, u - 1]);
 }
 
-/** Remplace un texte par un autre en fondu croisé (étiquettes « K = … ») ; `to` est caché au départ. */
+/** Cross-fades one text into another ("K = …" labels); `to` starts hidden. */
 export function swap(tl, from, to, position) {
   gsap.set(to, { opacity: 0 });
   tl.to(from, { opacity: 0, y: -10, duration: 0.3, ease: "power2.in" }, position);
@@ -217,7 +217,7 @@ export function swap(tl, from, to, position) {
   return tl;
 }
 
-/** Distances en sauts depuis `source` (parcours en largeur). */
+/** Hop distances from `source` (breadth-first search). */
 export function hops(count, links, source) {
   const near = Array.from({ length: count }, () => []);
   for (const [a, b] of links) near[a].push(b), near[b].push(a);
@@ -231,7 +231,7 @@ export function hops(count, links, source) {
   return dist;
 }
 
-/** Une couche d'agrégation moyenne avec boucle sur soi : x ← D̃⁻¹ Ã x. */
+/** One mean-aggregation layer with self-loops: x ← D̃⁻¹ Ã x. */
 export function meanLayer(x, links) {
   const sum = [...x];
   const deg = x.map(() => 1);

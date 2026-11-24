@@ -7,17 +7,17 @@ const CELL = { w: 24, h: 62, gap: 4 };
 const BIG = { w: 150, gap: 30 };
 const STEPS = [0, 2, 5, 16, 64];
 
-/** Embedding scalaire initial : il dépend de la communauté, avec un petit écart par nœud. */
+/** Initial scalar embedding: it depends on the community, with a small per-node offset. */
 const INITIAL = Array.from({ length: 21 }, (_, i) => Math.floor(i / 7) / 2 + 0.06 * (((i * 0.618) % 1) - 0.5));
 
-/** Embeddings après k couches d'agrégation moyenne, calculés réellement. */
+/** Embeddings after k mean-aggregation layers, actually computed. */
 function layers(max) {
   const out = [INITIAL];
   for (let k = 1; k <= max; k++) out.push(meanLayer(out.at(-1), LINKS));
   return out;
 }
 
-/** Oversmoothing : à force de couches, tous les embeddings convergent ; le pooling évite d'empiler. */
+/** Oversmoothing: with enough layers every embedding converges, whereas pooling avoids stacking them. */
 export default function smoothing(root) {
   const heading = title(root, "Oversmoothing");
   const panels = versus(root, [["MPNN", "on empile les couches"], ["MPNN + pooling", "2 couches, puis pooling"]]);
@@ -45,7 +45,7 @@ export default function smoothing(root) {
     );
   });
 
-  // Côté pooling : régions, super-nœuds, et trois cases (une par communauté).
+  // Pooling side: regions, super-nodes, and three cells (one per community).
   const right = nets[1];
   const hulls = [0, 1, 2].map((c) => hull(hullLayer, right, c, 30));
   hulls.forEach((h) => h.setAttribute("style", "fill: none; stroke: var(--ink-soft); stroke-width: 2; stroke-dasharray: 8 6"));
@@ -84,7 +84,7 @@ export default function smoothing(root) {
   };
   gsap.set(Object.values(captions), { opacity: 0 });
 
-  /** Colore nœuds et cases d'un panneau selon les embeddings après k couches. */
+  /** Colours a panel's nodes and cells from the embeddings after k layers. */
   const recolor = (side, k, position, duration = 1) => {
     graphs[side].nodes.forEach((n, i) => tl.to(n, { fill: valueColor(X[k][i]), duration, ease: "power2.inOut" }, position));
     rows[side].forEach((r, i) => tl.to(r, { fill: valueColor(X[k][i]), duration, ease: "power2.inOut" }, position));
@@ -100,7 +100,7 @@ export default function smoothing(root) {
   gsap.set([...kTags[0].slice(1), kTags[1][1], poolTag], { opacity: 0 });
   pause(tl);
 
-  // 2 couches des deux côtés : les communautés commencent à se mélanger.
+  // 2 layers on both sides: the communities start to mix.
   tl.addLabel("two");
   swap(tl, kTags[0][0], kTags[0][1], "two");
   swap(tl, kTags[1][0], kTags[1][1], "two");
@@ -108,7 +108,7 @@ export default function smoothing(root) {
   recolor(1, 2, "two+=0.2", 1.2);
   pause(tl);
 
-  // Pour tout voir, le MPNN continue (5 couches) ; à droite, on poole.
+  // To see everything, the MPNN goes on (5 layers); on the right, we pool.
   tl.addLabel("pool");
   swap(tl, kTags[0][1], kTags[0][2], "pool");
   recolor(0, 5, "pool+=0.2", 1.2);
@@ -136,7 +136,7 @@ export default function smoothing(root) {
   tl.fromTo([captions.reach, captions.reachPool], { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.6, stagger: 0.15, immediateRender: false }, "pool+=1.8");
   pause(tl);
 
-  // Encore plus de couches : tout converge vers la même valeur.
+  // Even more layers: everything converges to the same value.
   tl.addLabel("deep");
   swap(tl, kTags[0][2], kTags[0][3], "deep");
   recolor(0, 16, "deep+=0.2", 1.2);

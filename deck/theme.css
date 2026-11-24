@@ -21,7 +21,8 @@ body {
   margin: 0;
   height: 100%;
   overflow: hidden;
-  background: #e6ebf3;
+  /* Backdrop around the stage: same as the slide by default (configurable in the options, o key). */
+  background: var(--backdrop, var(--paper));
 }
 
 .stage {
@@ -109,7 +110,7 @@ body {
   opacity: 0.6;
 }
 
-/* Le numéro de page est séparé du contexte par un filet vertical. */
+/* The page number is separated from the context by a vertical rule. */
 .footer .page {
   min-width: 40px;
   padding-left: 18px;

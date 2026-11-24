@@ -4,7 +4,7 @@ import { COLORS, canvas, label, svg, tex, title } from "deck/components.js";
 import { line, theme } from "../helpers.js";
 import { EDGES, N, cite, drawGraph, formula, matrix, stepper, verdict } from "../methods.js";
 
-/** Affectation souple, telle qu'un GNN de pooling pourrait la produire (lignes de somme 1). */
+/** Soft assignment, as a pooling GNN could produce it (rows sum to 1). */
 export const SOFT = [
   [0.8, 0.12, 0.08], [0.84, 0.08, 0.08], [0.55, 0.2, 0.25], [0.22, 0.63, 0.15],
   [0.1, 0.72, 0.18], [0.08, 0.32, 0.6], [0.24, 0.08, 0.68], [0.1, 0.8, 0.1],
@@ -15,7 +15,7 @@ const SUPERS = [{ x: 1170, y: 470 }, { x: 1450, y: 470 }, { x: 1310, y: 700 }];
 const SUPER_R = 36;
 const fr = (v, d = 2) => v.toFixed(d).replace(".", ",");
 
-/** A′ = SᵀAS pour une affectation S (A symétrique, sans boucles). */
+/** A′ = SᵀAS for an assignment S (A symmetric, no self-loops). */
 export function coarsen(S) {
   const out = Array.from({ length: K }, () => Array(K).fill(0));
   for (const [a, b] of EDGES) {
@@ -24,7 +24,7 @@ export function coarsen(S) {
   return out;
 }
 
-/** DiffPool : un GNN produit une affectation souple S ; tous les nœuds contribuent à tous les super-nœuds. */
+/** DiffPool: a GNN produces a soft assignment S, so every node contributes to every super-node. */
 export default function diffpool(root) {
   const heading = title(root, "DiffPool");
   const steps = stepper(root);
@@ -44,7 +44,7 @@ export default function diffpool(root) {
   );
   const sName = label(root, tex(String.raw`S \in \mathbb{R}^{8 \times 3}`), CELL.x + (K * CELL.w) / 2 - 3, CELL.y + N * CELL.h + 34, 32);
 
-  // Graphe réduit : super-nœuds et arêtes pondérées par A′ = SᵀAS.
+  // Coarse graph: super-nodes and edges weighted by A′ = SᵀAS.
   const coarse = coarsen(SOFT);
   const pairs = [[0, 1], [0, 2], [1, 2]];
   const coarseEdges = pairs.map(([a, b]) => line(coarseLayer, SUPERS[a], SUPERS[b], "stroke: var(--ink)", { "stroke-width": 2 + 3 * coarse[a][b], "stroke-opacity": 0.75 }));
@@ -54,7 +54,7 @@ export default function diffpool(root) {
   const aPrime = label(root, tex(String.raw`A' = \begin{bmatrix} ${coarse.map((r) => r.map((v) => fr(v, 1)).join(" & ")).join(String.raw` \\ `)} \end{bmatrix}`), 1680, 590, 30);
   const dense = label(root, "toutes les paires sont reliées : A′ est dense", 1310, 820, 28, "abs muted");
 
-  // Paquets : chaque nœud envoie à chaque super-nœud une part S_ik de son attribut.
+  // Packets: each node sends each super-node a share S_ik of its attribute.
   const packetLayer = svg(layer, "g");
   const packets = SOFT.map((row, i) =>
     row.map((s) => svg(packetLayer, "circle", { cx: points[i].x, cy: points[i].y, r: 5 + 13 * s, style: `fill: ${colors[i]}; stroke: var(--paper); stroke-width: 2` })),
@@ -83,7 +83,7 @@ export default function diffpool(root) {
   tl.from(ref, { opacity: 0, duration: 0.6 }, "<");
   pause(tl);
 
-  // SEL : une ligne de S par nœud ; chaque nœud se répartit entre les trois super-nœuds.
+  // SEL: one row of S per node, each node being split across the three super-nodes.
   tl.addLabel("sel");
   steps.focus(tl, 0, "sel");
   show(formulas[0], "sel+=0.2");
@@ -97,7 +97,7 @@ export default function diffpool(root) {
   tl.from(sName, { opacity: 0, y: 10, duration: 0.5 }, "sel+=1.2");
   pause(tl);
 
-  // RED : chaque super-nœud reçoit une part de chaque nœud (colonne k de S).
+  // RED: each super-node receives a share of every node (column k of S).
   tl.addLabel("red");
   steps.focus(tl, 1, "red");
   hide(formulas[0], "red");
@@ -117,7 +117,7 @@ export default function diffpool(root) {
   }
   pause(tl);
 
-  // CON : A′ = SᵀAS relie toutes les paires de super-nœuds.
+  // CON: A′ = SᵀAS links every pair of super-nodes.
   tl.addLabel("con");
   steps.focus(tl, 2, "con");
   hide(formulas[1], "con");
@@ -129,7 +129,7 @@ export default function diffpool(root) {
   tl.from(dense, { opacity: 0, y: 10, duration: 0.5 }, "con+=1.8");
   pause(tl);
 
-  // Pertes auxiliaires et bilan.
+  // Auxiliary losses and verdict.
   tl.addLabel("end");
   steps.focus(tl, -1, "end");
   hide(formulas[2], "end");

@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SlideDeck · Presentations</title>
+    <link rel="icon" href="/deck/favicon.ico" sizes="any" />
+    <link rel="icon" href="/deck/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/deck/home.css" />
+  </head>
+  <body>
+    <aside class="hm-side">
+      <div class="hm-brand">
+        <svg viewBox="0 0 32 32" width="28" height="28" aria-hidden="true">
+          <rect x="3" y="6" width="26" height="17" rx="3" class="hm-logo-frame" />
+          <circle cx="11" cy="13.75" r="2.6" class="hm-logo-a" />
+          <circle cx="21" cy="11.25" r="2.6" class="hm-logo-b" />
+          <circle cx="19" cy="17.75" r="2.6" class="hm-logo-c" />
+          <path d="M11 13.75 21 11.25M11 13.75l8 4M21 11.25l-2 6.5" class="hm-logo-edge" />
+          <path d="M16 23v4M11 27h10" class="hm-logo-frame" />
+        </svg>
+        SlideDeck
+      </div>
+      <button class="hm-primary hm-new" data-action="new">
+        <svg viewBox="0 0 24 24" width="18" height="18"><path d="M12 5v14M5 12h14" /></svg>
+        <span data-i18n="home.new">New presentation</span>
+      </button>
+      <nav class="hm-views"></nav>
+      <h3>Tags</h3>
+      <nav class="hm-tags"></nav>
+      <div class="hm-lang"></div>
+    </aside>
+
+    <main class="hm-main">
+      <header class="hm-bar">
+        <label class="hm-search">
+          <svg viewBox="0 0 24 24" width="18" height="18"><circle cx="11" cy="11" r="7" /><path d="m20 20-4-4" /></svg>
+          <input type="search" placeholder="Search a presentation, a tag…" data-i18n-placeholder="home.search" spellcheck="false" />
+          <kbd>/</kbd>
+        </label>
+        <select class="hm-sort" aria-label="Sort" data-i18n-aria-label="home.sort">
+          <option value="modified" data-i18n="home.sortModified">Recently modified</option>
+          <option value="title" data-i18n="home.sortTitle">Title</option>
+          <option value="year" data-i18n="home.sortYear">Year</option>
+        </select>
+        <div class="hm-segment" role="group" aria-label="Layout" data-i18n-aria-label="home.layout">
+          <button data-layout="grid" title="Grid" data-i18n-title="home.grid"><svg viewBox="0 0 24 24" width="18" height="18"><rect x="4" y="4" width="7" height="7" rx="1.5" /><rect x="13" y="4" width="7" height="7" rx="1.5" /><rect x="4" y="13" width="7" height="7" rx="1.5" /><rect x="13" y="13" width="7" height="7" rx="1.5" /></svg></button>
+          <button data-layout="list" title="List" data-i18n-title="home.list"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01" /></svg></button>
+        </div>
+      </header>
+      <h1 class="hm-title"></h1>
+      <section class="hm-cards"></section>
+      <p class="hm-empty" hidden></p>
+    </main>
+
+    <div class="hm-menu" hidden></div>
+
+    <div class="hm-modal hm-create" hidden>
+      <form class="hm-dialog">
+        <h2 data-i18n="home.new">New presentation</h2>
+        <label><span data-i18n="home.fieldTitle">Title</span><input name="title" required placeholder="Pooling on graphs" data-i18n-placeholder="home.titlePlaceholder" autocomplete="off" /></label>
+        <div class="hm-fields">
+          <label><span data-i18n="home.folder">Folder</span><input name="name" required pattern="[a-z0-9][a-z0-9_]*" placeholder="pooling_on_graphs" data-i18n-placeholder="home.folderPlaceholder" autocomplete="off" /></label>
+          <label><span data-i18n="home.sortYear">Year</span><input name="year" required pattern="\d{4}" autocomplete="off" /></label>
+        </div>
+        <p class="hm-path"></p>
+        <p class="hm-error"></p>
+        <div class="hm-actions">
+          <button type="button" data-action="cancel" data-i18n="home.cancel">Cancel</button>
+          <button type="submit" class="hm-primary" data-i18n="home.create">Create and open</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="hm-modal hm-edit" hidden>
+      <form class="hm-dialog">
+        <h2 data-i18n="home.details">Details</h2>
+        <label><span data-i18n="home.fieldTitle">Title</span><input name="title" required autocomplete="off" /></label>
+        <label><span data-i18n="home.description">Description</span><textarea name="description" rows="3" maxlength="400" placeholder="Audience, goal, length…" data-i18n-placeholder="home.descriptionPlaceholder"></textarea></label>
+        <div class="hm-fields hm-fields-even">
+          <label><span data-i18n="home.date">Date of the talk</span><input name="date" type="date" /></label>
+          <label><span data-i18n="home.venue">Venue or event</span><input name="venue" maxlength="120" placeholder="ML seminar, Paris" data-i18n-placeholder="home.venuePlaceholder" autocomplete="off" /></label>
+        </div>
+        <p class="hm-error"></p>
+        <div class="hm-actions">
+          <button type="button" data-action="cancel" data-i18n="home.cancel">Cancel</button>
+          <button type="submit" class="hm-primary" data-i18n="home.save">Save</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="hm-toast" hidden></div>
+    <script type="module" src="/deck/home.js"></script>
+  </body>
+</html>

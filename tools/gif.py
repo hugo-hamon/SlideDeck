@@ -1,16 +1,17 @@
-"""Exporte les slides en GIF animés, une image par pas de temps de la timeline.
+"""Exports slides as animated GIFs, one frame per timeline time step.
 
-Chaque étape est rejouée à `--fps` images par seconde puis tenue `--hold` secondes,
-comme si l'orateur s'arrêtait. Le rendu est exact : la page est figée à chaque instant
-(deck.frame), sans dépendre de la vitesse de la machine.
+Each step is replayed at `--fps` frames per second, then held for `--hold` seconds, as if
+the speaker paused. Rendering is exact: the page is frozen at each instant (deck.frame),
+independently of the machine's speed.
 
-    .venv/bin/python tools/gif.py presentations/2026/demo              # une GIF par slide
-    .venv/bin/python tools/gif.py presentations/2026/demo --slide 3 5  # slides choisies
-    .venv/bin/python tools/gif.py presentations/2026/demo --combined   # tout dans une GIF
+    .venv/bin/python tools/gif.py presentations/2026/demo              # one GIF per slide
+    .venv/bin/python tools/gif.py presentations/2026/demo --slide 3 5  # chosen slides
+    .venv/bin/python tools/gif.py presentations/2026/demo --combined   # all in one GIF
 """
 
 import argparse
 import math
+from collections.abc import Callable
 from io import BytesIO
 from pathlib import Path
 
@@ -22,22 +23,25 @@ PALETTE_SAMPLES = 8
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Exporter les slides en GIF animés.")
+    parser = argparse.ArgumentParser(description="Export slides as animated GIFs.")
     parser.add_argument(
-        "project", type=Path, help="dossier de la présentation, ex. presentations/2026/demo"
+        "project", type=Path, help="presentation folder, e.g. presentations/2026/demo"
     )
-    parser.add_argument("--slide", type=int, nargs="+", help="slides à exporter (à partir de 1)")
-    parser.add_argument("--fps", type=int, default=25, help="images par seconde (défaut 25)")
-    parser.add_argument("--width", type=int, default=960, help="largeur en px (défaut 960)")
+    parser.add_argument("--slide", type=int, nargs="+", help="slides to export (from 1)")
+    parser.add_argument("--fps", type=int, default=25, help="frames per second (default 25)")
+    parser.add_argument("--width", type=int, default=960, help="width in px (default 960)")
     parser.add_argument(
-        "--hold", type=float, default=1.5, help="pause à la fin de chaque étape, en s (défaut 1,5)"
+        "--hold", type=float, default=1.5, help="pause at the end of each step, in s (default 1.5)"
     )
     parser.add_argument(
-        "--combined", action="store_true", help="une seule GIF enchaînant les slides choisies"
+        "--combined", action="store_true", help="a single GIF chaining the chosen slides"
     )
-    parser.add_argument("--once", action="store_true", help="jouer une fois au lieu de boucler")
+    parser.add_argument("--once", action="store_true", help="play once instead of looping")
     parser.add_argument(
-        "-o", "--output", type=Path, help="dossier de sortie (défaut <projet>/export)"
+        "-o", "--output", type=Path, help="output folder (default <project>/export)"
+    )
+    parser.add_argument(
+        "--progress", action="store_true", help='prints "@progress f message" lines (for serve.py)'
     )
     return parser.parse_args()
 
@@ -46,26 +50,53 @@ def shoot(page: Page) -> Image.Image:
     return Image.open(BytesIO(page.screenshot())).convert("RGB")
 
 
-def record(page: Page, slide: int, fps: int, hold: float) -> list[tuple[Image.Image, int]]:
-    """Images (et durées en ms) d'une slide : chaque étape jouée puis tenue."""
+def window(start: float, end: float, loops: list[dict[str, float]]) -> tuple[float, float, bool]:
+    """Interval to render for a step, reduced to a single cycle if the step contains a loop.
+
+    The chosen cycle is the loop's second one: the opening animations are over, so the
+    GIF loops seamlessly.
+    """
+    for loop in loops:
+        cycle = loop["cycle"]
+        if cycle <= 0 or loop["end"] <= start or loop["start"] >= end or end - start < 2 * cycle:
+            continue
+        first = loop["start"] + max(1, math.ceil((start - loop["start"]) / cycle)) * cycle
+        if first + cycle <= end:
+            return first, first + cycle, True
+    return start, end, False
+
+
+def record(
+    page: Page, slide: int, fps: int, hold: float, report: Callable[[float], None] = lambda f: None
+) -> list[tuple[Image.Image, int]]:
+    """Frames (and durations in ms) of a slide: each step played, then held.
+
+    `report` receives the progress within the slide, between 0 and 1, as frames are taken.
+    """
     page.evaluate(f"deck.goto({slide}, 1)")
-    stops = page.evaluate("deck.info().stops")
+    info = page.evaluate("deck.info()")
+    stops, loops = info["stops"], info.get("loops", [])
     frames: list[tuple[Image.Image, int]] = []
     delay = round(1000 / fps)
     start = 0.0
     for step, end in enumerate(stops, 1):
-        count = max(1, math.ceil((end - start) * fps))
+        first, last, looping = window(start, end, loops)
+        count = max(1, math.ceil((last - first) * fps))
         for k in range(1, count + 1):
-            page.evaluate(f"deck.frame({slide}, {step}, {k / count})")
+            fraction = (first + (last - first) * k / count - start) / (end - start)
+            page.evaluate(f"deck.frame({slide}, {step}, {fraction})")
             frames.append((shoot(page), delay))
-        image, last = frames[-1]
-        frames[-1] = (image, last + round(hold * 1000))
+            if k % 5 == 0 or k == count:
+                report((step - 1 + k / count) / len(stops))
+        if not looping:
+            image, previous = frames[-1]
+            frames[-1] = (image, previous + round(hold * 1000))
         start = end
     return frames
 
 
 def save_gif(frames: list[tuple[Image.Image, int]], path: Path, loop: bool) -> None:
-    """Palette commune (évite le scintillement), images identiques fusionnées."""
+    """Shared palette (avoids flicker), identical frames merged."""
     picks = frames[:: max(1, len(frames) // PALETTE_SAMPLES)][:PALETTE_SAMPLES]
     width, height = picks[0][0].size
     sheet = Image.new("RGB", (width, height * len(picks)))
@@ -101,18 +132,27 @@ def main() -> None:
         count = page.evaluate("deck.info().slides")
         slides = [s for s in args.slide or range(1, count + 1) if 1 <= s <= count]
         combined: list[tuple[Image.Image, int]] = []
-        for slide in slides:
-            frames = record(page, slide, args.fps, args.hold)
+        for done, slide in enumerate(slides):
+
+            def report(fraction: float, done: int = done, slide: int = slide) -> None:
+                if args.progress:
+                    total = (done + fraction) / len(slides)
+                    print(
+                        f"@progress {total:.4f} Slide {slide} ({done + 1}/{len(slides)})",
+                        flush=True,
+                    )
+
+            frames = record(page, slide, args.fps, args.hold, report)
             if args.combined:
                 combined += frames
                 continue
             path = output / f"slide-{slide:02d}.gif"
             save_gif(frames, path, not args.once)
-            print(f"{path}  ({len(frames)} images, {path.stat().st_size / 1e6:.1f} Mo)")
+            print(f"{path}  ({len(frames)} images, {path.stat().st_size / 1e6:.1f} MB)")
         if args.combined and combined:
             path = output / f"{project.name}.gif"
             save_gif(combined, path, not args.once)
-            print(f"{path}  ({len(combined)} images, {path.stat().st_size / 1e6:.1f} Mo)")
+            print(f"{path}  ({len(combined)} images, {path.stat().st_size / 1e6:.1f} MB)")
         browser.close()
     server.shutdown()
 

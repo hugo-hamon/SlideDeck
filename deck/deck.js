@@ -1,19 +1,25 @@
 import { gsap } from "gsap";
+import { createLaser } from "./laser.js";
+import { mountSlide, renderFooter } from "./mount.js";
+import { createNotes, noteKeys } from "./notes.js";
+import { createOptions } from "./options.js";
+import { createOverview } from "./overview.js";
+import { createPen } from "./pen.js";
+import { createPresenter } from "./presenter.js";
 import { createReview } from "./review.js";
+import { BACKDROPS, HOME_URL, actionFor, exported, hasHome, loadStyle, onSettings, thumbnail } from "./ui.js";
 
 const STAGE = { width: 1920, height: 1080 };
 const FADE = 0.35;
-const NEXT_KEYS = new Set(["ArrowRight", "ArrowDown", "PageDown", " "]);
-const PREV_KEYS = new Set(["ArrowLeft", "ArrowUp", "PageUp"]);
 
-/** Marque la fin d'une étape : l'orateur s'arrête ici. */
+/** Marks the end of a step: the speaker stops here. */
 export function pause(tl) {
   return tl.addLabel(`stop-${Object.keys(tl.labels).length}`);
 }
 
 /**
- * Associe à une slide un contexte affiché dans le pied de page (partie en cours, etc.).
- * Sans contexte, la zone reste vide : utile avant l'annonce du plan.
+ * Attaches a context shown in the footer to a slide (current part, etc.).
+ * Without context the area stays empty: useful before the outline is announced.
  */
 export function section(slide, html) {
   const wrapped = (root) => slide(root);
@@ -22,36 +28,56 @@ export function section(slide, html) {
   return wrapped;
 }
 
-/** Lance la présentation : chaque slide est une fonction (élément) => timeline GSAP. */
-export function startDeck(slides, { footer } = {}) {
+/** Starts the presentation: each slide is a function (element) => GSAP timeline. */
+export function startDeck(allSlides, { footer } = {}) {
+  // HTML export: only the chosen slides are kept, with their original numbers.
+  const kept = window.__DECK_EXPORT__?.slides?.filter((n) => n >= 1 && n <= allSlides.length);
+  const numbers = kept?.length ? kept : allSlides.map((_, i) => i + 1);
+  const slides = numbers.map((n) => allSlides[n - 1]);
   const stage = document.querySelector(".stage");
   const footerNode = footer ? renderFooter(stage, footer) : null;
   const state = { index: -1, step: 0, current: null, tween: null };
+  loadStyle("options.css");
+  onSettings((settings) => document.documentElement.style.setProperty("--backdrop", BACKDROPS[settings.backdrop]));
 
+  const names = slides.map((slide) => slide.slideName ?? slide.name ?? "");
   const review = createReview(stage, {
-    names: slides.map((slide) => slide.slideName ?? slide.name ?? ""),
+    names,
     goto: (index, step) => show(index, step, false),
     onLayout: () => fit(),
   });
+  const pen = createPen(stage);
+  const printPdf = async ({ picked, perStep, onProgress }) =>
+    (await import("./print.js")).printSlides({ slides, numbers, footer, picked, perStep, onProgress });
+  const options = createOptions({ names, current: () => state.index, pen, printPdf });
+  const notes = createNotes(noteKeys(names));
+  const overview = createOverview({ slides, numbers, names, current: () => state.index, onPick: (index) => go(index, 0, false) });
+  // Navigation received from the other window (presenter ↔ audience): applied without echoing it.
+  const apply = {
+    current: () => ({ index: state.index, step: state.step, animate: false }),
+    to(index, step, animate) {
+      if (index === state.index && step === state.step) return;
+      state.remote = true;
+      show(index, step, animate);
+      state.remote = false;
+    },
+  };
+  const laser = createLaser(stage, { onMove: (x, y, visible) => presenter.laser(x, y, visible) });
+  const presenter = createPresenter({ slides, numbers, names, notes, footer, apply, onLaser: laser.remote });
 
-  // En mode Édition, la scène laisse la place au panneau latéral.
+  // The stage fills the window, minus the edit-mode panel or the presenter view.
   const fit = () => {
-    const width = innerWidth - review.inset();
-    const scale = Math.min(width / STAGE.width, innerHeight / STAGE.height);
-    stage.style.left = `${width / 2}px`;
+    const area = presenter.area() ?? { x: 0, y: 0, w: innerWidth - review.inset(), h: innerHeight };
+    const scale = Math.min(area.w / STAGE.width, area.h / STAGE.height);
+    stage.style.left = `${area.x + area.w / 2}px`;
+    stage.style.top = `${area.y + area.h / 2}px`;
     stage.style.transform = `translate(-50%, -50%) scale(${scale})`;
   };
 
-  function mount(index) {
-    const el = document.createElement("section");
-    el.className = "slide";
-    stage.insertBefore(el, footerNode);
-    const tl = slides[index](el).pause(0);
-    const times = Object.entries(tl.labels).filter(([name]) => name.startsWith("stop-")).map(([, t]) => t);
-    const stops = [...new Set(times)].filter((t) => t > 0).sort((a, b) => a - b);
-    if (!stops.length || stops.at(-1) < tl.duration() - 1e-6) stops.push(tl.duration());
-    return { el, tl, stops };
-  }
+  const mount = (index) => mountSlide(slides[index], stage, footerNode);
+
+  /** User navigation in this window. */
+  const go = (index, step, animate) => show(index, step, animate);
 
   function show(index, step, animate) {
     state.tween?.kill();
@@ -76,8 +102,11 @@ export function startDeck(slides, { footer } = {}) {
       state.tween = tl.tweenFromTo(from, stops[target], { delay: changed ? FADE * 0.6 : 0 });
     } else tl.seek(stops[target]);
     state.step = target;
-    if (footerNode) updateFooter(footerNode, index, slides[index].context ?? "", animate);
+    pen.setSlide(index);
+    if (footerNode) updateFooter(footerNode, numbers[index], slides[index].context ?? "", animate);
     review.update(index, target, stops.length);
+    if (state.remote) presenter.refresh(index, target, stops.length);
+    else presenter.notify(index, target, animate, stops.length);
     history.replaceState(null, "", `#/${index + 1}/${target + 1}`);
   }
 
@@ -102,16 +131,44 @@ export function startDeck(slides, { footer } = {}) {
 
   addEventListener("resize", fit);
   addEventListener("hashchange", fromHash);
+  // Shortcuts are configured in the options window (o key); see ACTIONS in ui.js.
+  const actions = {
+    next,
+    prev,
+    first: () => show(0, 0, false),
+    last: () => show(slides.length - 1, -1, false),
+    fullscreen: () => (document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen()),
+    options: () => options.toggle(),
+    pen: () => {
+      if (review.active()) return;
+      laser.toggle(false);
+      pen.toggle();
+    },
+    penUndo: () => pen.undo(),
+    penClear: () => pen.clear(),
+    edit: () => {
+      pen.toggle(false);
+      review.toggle();
+    },
+    home: () => hasHome() && location.assign(HOME_URL),
+    presenter: () => presenter.open(),
+    overview: () => overview.toggle(),
+    laser: () => {
+      pen.toggle(false);
+      laser.toggle();
+    },
+  };
   addEventListener("keydown", (event) => {
-    if (event.target.closest?.("input, textarea, [contenteditable]")) return;
+    if (thumbnail()) return;
+    if (options.handleKey(event)) return event.preventDefault();
+    if (overview.handleKey(event, actionFor(event))) return event.preventDefault();
+    if (event.target.closest?.("input, textarea, select, [contenteditable]")) return;
     if (review.handleKey(event)) return event.preventDefault();
-    if (event.ctrlKey || event.metaKey || event.altKey) return;
-    if (NEXT_KEYS.has(event.key)) next();
-    else if (PREV_KEYS.has(event.key)) prev();
-    else if (event.key === "Home") show(0, 0, false);
-    else if (event.key === "End") show(slides.length - 1, -1, false);
-    else if (event.key === "f") document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
-    else return;
+    if (event.key === "Escape" && pen.active()) return pen.toggle(false), event.preventDefault();
+    if (event.key === "Escape" && laser.active()) return laser.toggle(false), event.preventDefault();
+    const action = actionFor(event);
+    if (!action) return;
+    actions[action]();
     event.preventDefault();
   });
   fit();
@@ -120,38 +177,34 @@ export function startDeck(slides, { footer } = {}) {
 
   window.deck = {
     goto: (slide, step = 1) => show(slide - 1, step - 1, false),
-    /** Fige l'animation de l'étape à une fraction de sa durée (0 = début, 1 = fin). */
+    /** Freezes the step's animation at a fraction of its duration (0 = start, 1 = end). */
     frame: (slide, step, fraction) => {
       show(slide - 1, step - 1, false);
       const { tl, stops } = state.current;
       const from = step === 1 ? 0 : stops[step - 2];
       tl.seek(from + (stops[step - 1] - from) * fraction);
     },
-    /** Retours du mode Édition (touche `e`) : voir tools/review.py. */
+    /** Edit-mode feedback (`e` key): see tools/review.py. */
     review: review.api,
-    /** `stops` : fin de chaque étape, en secondes de timeline (export GIF). */
+    /** `stops`: end of each step, in timeline seconds (GIF export). */
     info: () => ({
       slide: state.index + 1,
       step: state.step + 1,
       steps: state.current.stops.length,
       stops: [...state.current.stops],
+      /** Repeating timelines (e.g. a welcome loop): the GIF export keeps a single cycle. */
+      loops: state.current.tl
+        .getChildren(false, false, true)
+        .filter((child) => child.repeat() !== 0)
+        .map((child) => ({ start: child.startTime(), cycle: child.duration(), end: child.endTime() })),
       slides: slides.length,
     }),
   };
 }
 
-function renderFooter(stage, items) {
-  const node = document.createElement("footer");
-  node.className = "footer";
-  const info = items.filter(Boolean).map((item) => `<span>${item}</span>`).join('<span class="sep">·</span>');
-  node.innerHTML = `<div class="info">${info}</div><div class="where"><span class="context"></span><span class="page"></span></div>`;
-  stage.appendChild(node);
-  return node;
-}
-
-/** Numéro de page et contexte ; le contexte change en fondu quand on change de partie. */
-function updateFooter(node, index, html, animate) {
-  node.querySelector(".page").textContent = String(index + 1).padStart(2, "0");
+/** Page number and context, which cross-fades when the part changes. */
+function updateFooter(node, number, html, animate) {
+  node.querySelector(".page").textContent = String(number).padStart(2, "0");
   const context = node.querySelector(".context");
   if (context.dataset.html === html) return;
   context.dataset.html = html;
@@ -170,8 +223,9 @@ function updateFooter(node, index, html, animate) {
   });
 }
 
-/** Recharge la page quand deck/serve.py signale un fichier modifié ; ignoré ailleurs. */
+/** Reloads the page when tools/serve.py reports a changed file (ignored elsewhere). */
 function liveReload() {
+  if (exported() || thumbnail() || location.protocol === "file:") return;
   const source = new EventSource("/__reload");
   source.onmessage = () => location.reload();
   source.onerror = () => source.readyState === EventSource.CLOSED && source.close();

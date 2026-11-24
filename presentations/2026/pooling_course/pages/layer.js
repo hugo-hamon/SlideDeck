@@ -10,7 +10,7 @@ const RING_R = 40;
 const TARGET = 3;
 const NEAR = neighbors(TARGET);
 const EQ_X = 1090;
-// Directions libres de toute arête pour les étiquettes s, v₁, v₂, v₃.
+// Edge-free directions for the s, v₁, v₂, v₃ labels.
 const LABEL_SIDES = { 3: [0, -1], 2: [0.85, 0.6], 4: [1, 0.15], 7: [1, 0.2] };
 const MODELS = [
   ["GCN", "Kipf & Welling, 2017", 0, [String.raw`h_s^{(k+1)} = \sigma\Big(\sum_{v \in \mathcal{N}(s) \cup \{s\}} \frac{1}{\sqrt{\hat d_s \hat d_v}} \, W^{(k)} h_v^{(k)}\Big)`]],
@@ -24,14 +24,14 @@ const MODELS = [
   ]],
 ];
 
-/** Code couleur des formules : s en bleu, voisins v en vert, arêtes en rouge. */
+/** Formula colour code: s in blue, neighbours v in green, edges in red. */
 const colorize = (expression) =>
   expression
     .replaceAll("h_s^{(k)}", String.raw`\htmlClass{c-blue}{h_s^{(k)}}`)
     .replaceAll("h_v^{(k)}", String.raw`\htmlClass{c-green}{h_v^{(k)}}`)
     .replaceAll("e_{vs}", String.raw`\htmlClass{c-red}{e_{vs}}`);
 
-/** Étape d'une couche : nom au-dessus, équation alignée à gauche. */
+/** Step of a layer: name above, equation left-aligned. */
 function equation(root, name, expression, y) {
   return div(root, "abs", {
     x: EQ_X, y,
@@ -48,9 +48,9 @@ function nameTag(root, i, html, color) {
   return label(root, html, POINTS[i].x + (dx / d) * (RING_R + 30), POINTS[i].y + (dy / d) * (RING_R + 26), 40, `abs ${color}`);
 }
 
-/** Une couche de message passing, synchronisée avec ses équations, puis trois MPNN classiques. */
+/** One message-passing layer, synchronised with its equations, then three classic MPNNs. */
 export default function layer(root) {
-  // On repart de l'état final de la slide 07 pour entrer dans la boîte sans couture.
+  // Start from slide 07's final state to enter the box seamlessly.
   const macro = buildMacro(root, { done: true });
   const colors = embeddingColors(8);
   const [blue, green, red] = ["blue", "green", "red"].map(theme);
@@ -85,7 +85,7 @@ export default function layer(root) {
   const update = equation(root, "3. Mise à jour", String.raw`\htmlClass{q-new}{h_s^{(k+1)}} = \phi\big(\htmlClass{c-blue}{h_s^{(k)}}, \htmlClass{c-red}{m_s}\big)`, 680);
   const part = (node, name) => node.querySelector(`.${name}`);
 
-  // Messages : un carré par voisin, de la couleur de son embedding.
+  // Messages: one square per neighbour, in its embedding colour.
   const sPoint = POINTS[TARGET];
   const SIDE = 34;
   const tokens = NEAR.map((u) =>
@@ -107,7 +107,7 @@ export default function layer(root) {
   tl.from(graph, { x: -320, opacity: 0, duration: 1.2, ease: "power3.out" }, "<0.1");
   pause(tl);
 
-  // s et ses voisins.
+  // s and its neighbours.
   drawIn(tl, sRing, { duration: 0.6 });
   tl.from([sName, notation], { opacity: 0, y: 10, duration: 0.6, stagger: 0.1 }, "<0.1");
   drawIn(tl, vRings, { duration: 0.6, stagger: 0.08 }, ">-0.1");
@@ -115,7 +115,7 @@ export default function layer(root) {
   tl.to(incident, { stroke: green, attr: { "stroke-width": 5 }, duration: 0.6, ease: "power2.inOut" }, "<");
   pause(tl);
 
-  // 1. Message : chaque voisin envoie un message vers s.
+  // 1. Message: each neighbour sends a message to s.
   tl.from(message, { opacity: 0, y: 14, duration: 0.8 });
   tl.from(tokens, { scale: 0, transformOrigin: "50% 50%", duration: 0.5, ease: "back.out(2.5)", stagger: 0.08 }, "<0.3");
   tokens.forEach((token, k) => {
@@ -126,7 +126,7 @@ export default function layer(root) {
   tl.to([part(message, "q-psi"), part(message, "q-m")], { color: red, duration: 0.5, ease: "power2.inOut" }, "<0.2");
   pause(tl);
 
-  // 2. Agrégation : les messages fusionnent.
+  // 2. Aggregation: the messages merge.
   tl.from(aggregation, { opacity: 0, y: 14, duration: 0.8 });
   tokens.forEach((token, k) => {
     const p = POINTS[NEAR[k]];
@@ -136,7 +136,7 @@ export default function layer(root) {
   tl.from(note, { opacity: 0, y: 10, duration: 0.6 }, "<0.2");
   pause(tl);
 
-  // 3. Mise à jour : le message agrégé rejoint s, dont l'embedding change.
+  // 3. Update: the aggregated message reaches s, whose embedding changes.
   tl.from(update, { opacity: 0, y: 14, duration: 0.8 });
   tokens.forEach((token, k) => {
     const p = POINTS[NEAR[k]];
@@ -147,7 +147,7 @@ export default function layer(root) {
   tl.to(part(update, "q-new"), { color: blue, duration: 0.5 }, "<");
   pause(tl);
 
-  // Tous les nœuds en parallèle.
+  // Every node in parallel.
   tl.addLabel("parallel");
   tl.to([...vRings, ...vNames, notation], { opacity: 0, duration: 0.4, ease: "power2.in" }, "parallel");
   tl.to(incident, { stroke: theme("ink-soft"), attr: { "stroke-width": 3 }, duration: 0.6, ease: "power2.inOut" }, "parallel");
@@ -161,7 +161,7 @@ export default function layer(root) {
   tl.to(part(update, "q-new"), { scale: 1.12, transformOrigin: "0% 50%", duration: 0.3, yoyo: true, repeat: 1, ease: "power2.inOut" }, "parallel+=1.5");
   pause(tl);
 
-  // K couches : le voisinage atteint s'élargit d'un saut par couche.
+  // K layers: the reached neighbourhood grows by one hop per layer.
   const hops = [NEAR, POINTS.map((_, i) => i).filter((i) => i !== TARGET && !NEAR.includes(i))];
   const reached = new Set([TARGET]);
   const hopMarks = [];
@@ -183,7 +183,7 @@ export default function layer(root) {
   });
   pause(tl);
 
-  // Trois MPNN classiques, un par arrêt.
+  // Three classic MPNNs, one per stop.
   const models = div(root, "abs", { x: EQ_X - 110, y: 215 });
   const blocks = MODELS.map(([name, reference, color, lines]) => {
     const block = div(models, "", {

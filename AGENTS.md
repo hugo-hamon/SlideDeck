@@ -9,19 +9,25 @@ code et rapidité d'itération. Ces règles s'appliquent à Claude Code, Codex e
 1. Lire le `README.md` de la présentation, puis `deck/components.js` et `deck/theme.css`.
 2. Comprendre l'idée à communiquer, le public et la durée visée.
 3. Découper en étapes visuelles : une étape = une idée, pas une phrase.
-4. Modifier le minimum nécessaire ; ne pas toucher aux autres présentations.
+4. Modifier le minimum nécessaire, sans toucher aux autres présentations.
 
 ## 2. Structure
 
 ```text
 SlideDeck/
-├── deck/                 # moteur partagé : deck.js, components.js, theme.css, review.js (mode Édition)
-├── tools/                # serve.py (aperçu), capture.py (storyboard), review.py (retours), gif.py (export GIF), new.py
+├── deck/                 # moteur partagé : deck.js, components.js, theme.css, review.js (mode Édition),
+│                         # options.js (touche o : export HTML/GIF, raccourcis), pen.js (stylo), export.js, ui.js,
+│                         # home.* (page d'accueil de serve.py : liste, tags, archives),
+│                         # presenter.js + notes.js (touche s), overview.js (g), laser.js (l), print.js (PDF), mount.js,
+│                         # i18n.js (langue de l'interface : anglais par défaut, français)
+├── tools/                # serve.py (aperçu + accueil), library.py (accueil), capture.py (storyboard), review.py (retours), gif.py (export GIF), new.py
 ├── templates/presentation/
 └── presentations/<année>/<nom_en_snake_case>/
     ├── index.html        # ordre des slides, pied de page
     ├── pages/*.js        # une slide par fichier
     ├── assets/           # images, données (si nécessaire)
+    ├── meta.json         # tags, archive, favori, description, date, lieu (page d'accueil)
+    ├── notes.json        # notes de l'orateur (vue présentateur), clé « nomDeSlide#rang »
     └── README.md         # intention, public, commandes
 ```
 
@@ -30,6 +36,17 @@ SlideDeck/
 - Fonction réutilisée par plusieurs présentations : `deck/components.js`.
   Chercher avant de créer, **réutiliser avant de dupliquer**, API courte et explicite.
 - Les imports du moteur passent par l'alias `deck/` (`import { pause } from "deck/deck.js"`).
+- **Langue : le code est en anglais.** Identifiants, commentaires, docstrings, messages
+  de la ligne de commande, journaux et messages de commit s'écrivent en anglais, dans `deck/`,
+  `tools/`, `templates/` comme dans les présentations.
+  - Le texte de l'interface de l'outil ne s'écrit jamais en dur : il passe par `t("clé")` de
+    `deck/i18n.js`, avec une entrée `en` et une entrée `fr` pour chaque clé.
+  - Seul le **contenu des slides** (titres, textes, formules affichés) et le `README.md` d'une
+    présentation suivent la langue de la présentation.
+- **Style d'écriture : pas de point-virgule dans une phrase**, en français comme en anglais.
+  Lier les idées par des transitions fluides (« et », « puis », « tandis que », « ce qui »,
+  « avec », une virgule) ou couper en deux phrases. Cela vaut pour les textes des slides,
+  l'interface, les README, les commentaires et les docstrings.
 
 ## 3. Contrat d'une slide
 
@@ -46,7 +63,7 @@ export default function maSlide(root) {      // root : <section> vide, scène 19
 }
 ```
 
-- Seuls les labels posés par `pause(tl)` sont des arrêts ; les autres labels servent au placement.
+- Seuls les labels posés par `pause(tl)` sont des arrêts, les autres servent au placement.
 - Tout l'état dépend **uniquement du temps de la timeline** : pas de `setTimeout`, pas de
   transition CSS, pas d'aléatoire non fixé. C'est ce qui rend `#/slide/étape`, le retour
   arrière et les captures exacts.
@@ -73,7 +90,7 @@ export default function maSlide(root) {      // root : <section> vide, scène 19
 - Arrivée : `expo.out`, ou `back.out(2)` pour un petit objet qui « pop ».
   Déplacement d'un objet existant : `power3.inOut`. Sortie : `power2.in`, plus courte.
 - Décalages : 20–60 ms entre éléments d'une liste, 100–150 ms entre groupes.
-- Étape de 0,6 à 1,5 s ; démarrer l'élément suivant avant la fin du précédent (`"<0.2"`).
+- Étape de 0,6 à 1,5 s, en démarrant l'élément suivant avant la fin du précédent (`"<0.2"`).
 - Préserver l'identité des objets : ils se déplacent et se transforment (copie qui glisse,
   nœuds qui convergent) plutôt que de disparaître puis réapparaître.
 
@@ -106,7 +123,7 @@ notes ponctuelles, note générale par slide. Tout est dans `<présentation>/fee
 
 ## 8. Avant de livrer
 
-- Le storyboard a été **réellement inspecté** ; `report.json` ne signale ni erreur ni hors-cadre.
+- Le storyboard a été **réellement inspecté** et `report.json` ne signale ni erreur ni hors-cadre.
 - Chaque étape a un début, une fin et un temps d'observation pertinent.
 - Si `deck/` change, recapturer au moins une autre présentation qui l'utilise.
 - Python : `ruff format .` et `ruff check .`.

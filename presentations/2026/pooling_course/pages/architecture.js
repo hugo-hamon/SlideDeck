@@ -22,7 +22,7 @@ const CARD = { x: 1400, y: 395, w: 330, h: 255 };
 const PROBABILITIES = [0.3, 0.85, 0.42];
 const LEGEND = ["Message passing", "Pooling", "Readout", "Prédiction"];
 
-/** Panneau d'architecture dans le style d'une figure d'article, construit de gauche à droite. */
+/** Architecture panel in the style of a paper figure, built from left to right. */
 export default function architecture(root) {
   const panel = div(root, "panel", { x: 100, y: 150, w: 1720, h: 830 });
   const heading = title(root, "Architecture d’un GNN avec pooling", 175);
@@ -122,11 +122,11 @@ function revealBlocks(tl, items, position = ">") {
   });
 }
 
-/** Une copie du bloc précédent glisse et s'écrase jusqu'à la taille du bloc réduit. */
+/** A copy of the previous block slides and squashes down to the size of the reduced block. */
 function squash(tl, source, target, from, to, layer) {
   const ghost = source.shape.cloneNode(true);
   layer.appendChild(ghost);
-  // Le clone hérite de l'état « from » du bloc : on le remet à zéro, visible seulement après l'arrêt.
+  // The clone inherits the block's "from" state: reset it, visible only after the stop.
   gsap.set(ghost, { opacity: 0, x: 0 });
   growArrow(tl, target.link);
   tl.fromTo(ghost, { opacity: 0 }, { opacity: 1, duration: 0.05, immediateRender: false }, "<");

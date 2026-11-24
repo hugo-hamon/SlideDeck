@@ -2,7 +2,7 @@ import { gsap } from "gsap";
 import { pause } from "deck/deck.js";
 import { div, title } from "deck/components.js";
 
-/** Page de titre : remplacer par la première idée visuelle de la présentation. */
+/** Title slide: replace it with the presentation's first visual idea. */
 export default function cover(root) {
   const heading = title(root, "{{title}}", 430);
   const rule = div(root, "abs", {

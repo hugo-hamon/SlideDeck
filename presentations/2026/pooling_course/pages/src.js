@@ -9,7 +9,7 @@ const CARD = { x: 1080, w: 720, h: 178, ys: [252, 450, 648] };
 const MATRIX = { x: 840, y: 430, w: 56, h: 38 };
 const SUPER_R = 34;
 
-/** Carte d'une étape : sigle à gauche, rôle et formule à droite. */
+/** Card of a stage: acronym on the left, role and formula on the right. */
 function card(root, y, short, role, formula) {
   return div(root, "abs", {
     x: CARD.x, y, w: CARD.w, h: CARD.h,
@@ -21,7 +21,7 @@ function card(root, y, short, role, formula) {
   });
 }
 
-/** Le cadre SRC : tout pooling = sélection (S), réduction (X′) et connexion (A′). */
+/** The SRC framework: any pooling = selection (S), reduction (X′) and connection (A′). */
 export default function src(root) {
   const heading = title(root, "Le cadre SRC");
   const layer = canvas(root);
@@ -30,7 +30,7 @@ export default function src(root) {
   const graph = drawGraph(layer, { scale: 205, origin: [430, 585] });
   const { points } = graph;
 
-  // Régions, super-nœuds et arêtes du graphe réduit.
+  // Regions, super-nodes and edges of the coarse graph.
   const members = [0, 1, 2].map((c) => points.map((_, i) => i).filter((i) => GROUPS[i] === c));
   const centers = members.map((ids) => ({ x: ids.reduce((s, i) => s + points[i].x, 0) / ids.length, y: ids.reduce((s, i) => s + points[i].y, 0) / ids.length }));
   const hulls = members.map((ids, c) => {
@@ -47,7 +47,7 @@ export default function src(root) {
   );
   gsap.set(supers, { scale: 0, transformOrigin: "50% 50%" });
 
-  // Matrice d'affectation S (8 × 3), ici une affectation dure.
+  // Assignment matrix S (8 × 3), here a hard assignment.
   const S = matrix(root, layer, { x: MATRIX.x, y: MATRIX.y, rows: 8, cols: K, w: MATRIX.w, h: MATRIX.h });
   const sName = label(root, tex(String.raw`S`), MATRIX.x + (K * MATRIX.w) / 2 - 3, MATRIX.y + 8 * MATRIX.h + 34, 36);
   const graphName = label(root, tex(String.raw`\mathcal{G} = (X, A)`), 430, 850, 36);
@@ -71,7 +71,7 @@ export default function src(root) {
 
   const tl = gsap.timeline({ defaults: { ease: "expo.out" } });
 
-  // 1. Le graphe d'entrée et la question : comment le réduire ?
+  // 1. The input graph and the question: how to reduce it?
   tl.from(heading, { opacity: 0, y: 24, duration: 0.8 });
   tl.from(graph.groups, { scale: 0, transformOrigin: "50% 50%", duration: 0.5, ease: "back.out(2)", stagger: 0.04 }, "<0.2");
   tl.from(graph.edges, { opacity: 0, duration: 0.6 }, "<0.3");
@@ -79,7 +79,7 @@ export default function src(root) {
   tl.from(ref, { opacity: 0, duration: 0.6 }, "<");
   pause(tl);
 
-  // 2. SEL : chaque nœud est affecté à un super-nœud, ligne par ligne dans S.
+  // 2. SEL: each node is assigned to a super-node, row by row in S.
   tl.addLabel("sel");
   tl.from(cards[0], { opacity: 0, x: 30, duration: 0.7 }, "sel");
   focus(tl, 0, "sel");
@@ -93,11 +93,11 @@ export default function src(root) {
   tl.from(sName, { opacity: 0, y: 10, duration: 0.5 }, "sel+=1.2");
   pause(tl);
 
-  // 3. RED : les nœuds de chaque région se fondent en un super-nœud (moyenne des attributs).
+  // 3. RED: each region's nodes merge into a super-node (mean of the attributes).
   tl.addLabel("red");
   tl.from(cards[1], { opacity: 0, x: 30, duration: 0.7 }, "red");
   focus(tl, 1, "red");
-  // Les arêtes suivent leurs extrémités, estompées : la connexion reste à décider.
+  // Edges follow their endpoints, faded: the connection is still to be decided.
   tl.to(graph.edges, { attr: { "stroke-opacity": 0.3 }, duration: 0.4 }, "red+=0.2");
   points.forEach((p, i) => {
     const c = centers[GROUPS[i]];
@@ -112,18 +112,18 @@ export default function src(root) {
   tl.to(hulls, { opacity: 0, duration: 0.6 }, "red+=1.4");
   pause(tl);
 
-  // 4. CON : les arêtes entre régions deviennent les arêtes du graphe réduit.
+  // 4. CON: edges between regions become the coarse graph's edges.
   tl.addLabel("con");
   tl.from(cards[2], { opacity: 0, x: 30, duration: 0.7 }, "con");
   focus(tl, 2, "con");
-  // Chaque arête entre deux régions compte pour 1 dans A′ ; les arêtes internes vont sur la diagonale.
+  // Each edge between two regions counts 1 in A′; internal edges go on the diagonal.
   tl.from(coarseEdges, { attr: { "stroke-width": 0 }, opacity: 0, duration: 0.8, ease: "power3.out", stagger: 0.15 }, "con+=0.5");
   tl.to(graph.edges, { opacity: 0, duration: 0.3 }, "con+=0.9");
   tl.to(graphName, { opacity: 0, y: -10, duration: 0.3, ease: "power2.in" }, "con+=1.2");
   tl.fromTo(coarseName, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.5, immediateRender: false }, "con+=1.5");
   pause(tl);
 
-  // 5. Le cadre général.
+  // 5. The general framework.
   focus(tl, -1, ">");
   tl.from(summary, { opacity: 0, y: 12, duration: 0.7 }, "<0.2");
   tl.to(ref, { color: theme("ink"), duration: 0.6 }, "<0.3");

@@ -1,15 +1,17 @@
 /**
- * Mode Édition : touche `e`. On entoure au feutre, on pose des notes et on écrit une note
- * générale par slide. Les retours sont enregistrés dans `feedback.json` à côté de
- * `index.html` (via tools/serve.py), puis lus par tools/review.py.
+ * Edit mode (`e` key): circle things with a marker, drop notes and write a general note
+ * per slide. Feedback is saved to `feedback.json` next to `index.html` (through
+ * tools/serve.py), then read by tools/review.py.
  */
+import { keyLabel, t } from "./i18n.js";
+import { exported, loadStyle, settings } from "./ui.js";
+
 const NS = "http://www.w3.org/2000/svg";
 const PANEL_WIDTH = 380;
 const SAVE_DELAY = 300;
 const MIN_STEP = 4;
 const MAX_TARGETS = 6;
 const TOOLS = { p: "pen", n: "note", x: "erase" };
-const TOOL_LABELS = { pen: "Feutre", note: "Note", erase: "Gomme" };
 const ACTIVE_KEY = "deck-review-active";
 
 export function createReview(stage, { names, goto, onLayout }) {
@@ -21,17 +23,14 @@ export function createReview(stage, { names, goto, onLayout }) {
   let saveTimer = null;
   let live = null;
 
-  const link = document.createElement("link");
-  link.rel = "stylesheet";
-  link.href = new URL("./review.css", import.meta.url);
-  document.head.appendChild(link);
+  loadStyle("review.css");
 
   const layer = svgNode("svg", { class: "review-layer", viewBox: "0 0 1920 1080" });
   stage.appendChild(layer);
   const panel = buildPanel();
   document.body.appendChild(panel);
 
-  // ---------- données ----------
+  // ---------- data ----------
 
   function empty() {
     return { version: 1, slides: {} };
@@ -86,7 +85,10 @@ export function createReview(stage, { names, goto, onLayout }) {
   }
 
   async function load() {
+    // Exported page (file://, no server): only the browser's own feedback exists.
+    const served = !exported() && location.protocol.startsWith("http");
     try {
+      if (!served) throw new Error("no server");
       const response = await fetch(url, { cache: "no-store" });
       if (response.ok) {
         data = { ...empty(), ...(await response.json()) };
@@ -106,34 +108,36 @@ export function createReview(stage, { names, goto, onLayout }) {
 
   function save() {
     clearTimeout(saveTimer);
-    setStatus("Enregistrement…");
+    setStatus(t("review.saving"));
     saveTimer = setTimeout(flush, SAVE_DELAY);
   }
 
-  /** Écrit sur disque ; le navigateur ne garde une copie que si le serveur refuse. */
+  /** Writes to disk, and the browser keeps a copy only if the server refuses. */
   async function flush() {
     saveTimer = null;
     const body = serialize();
     try {
+      if (exported() || !location.protocol.startsWith("http")) throw new Error("no server");
       const response = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body });
       if (!response.ok) throw new Error(response.statusText);
       localStorage.removeItem(localKey);
-      setStatus("Enregistré dans feedback.json");
+      setStatus(t("review.saved"));
     } catch {
       try {
         localStorage.setItem(localKey, body);
       } catch {}
-      setStatus("Serveur en lecture seule : retours gardés dans ce navigateur", true);
+      setStatus(t("review.local"), true);
     }
   }
 
   addEventListener("pagehide", () => {
     if (saveTimer === null) return;
     clearTimeout(saveTimer);
-    navigator.sendBeacon(url, new Blob([serialize()], { type: "application/json" }));
+    if (!exported() && location.protocol.startsWith("http")) navigator.sendBeacon(url, new Blob([serialize()], { type: "application/json" }));
+    else flush();
   });
 
-  // ---------- repérage des éléments visés ----------
+  // ---------- locating the targeted elements ----------
 
   function currentSlide() {
     return [...stage.querySelectorAll(".slide:not(.leaving)")].at(-1);
@@ -168,7 +172,7 @@ export function createReview(stage, { names, goto, onLayout }) {
 
   const insideFormula = (el) => Boolean(el.parentElement?.closest(".katex")) || Boolean(el.closest("defs"));
 
-  /** Éléments visibles contenus dans la zone entourée, en ne gardant que les plus englobants. */
+  /** Visible elements inside the circled area, keeping only the outermost ones. */
   function boxTargets(box) {
     const slide = currentSlide();
     if (!slide) return [];
@@ -192,7 +196,7 @@ export function createReview(stage, { names, goto, onLayout }) {
       .map(([el, b]) => describe(el, b));
   }
 
-  /** Éléments sous le point, du plus profond au plus large. */
+  /** Elements under the point, from the deepest to the widest. */
   function pointTargets(clientX, clientY) {
     const slide = currentSlide();
     if (!slide) return [];
@@ -206,7 +210,7 @@ export function createReview(stage, { names, goto, onLayout }) {
     return [...seen].slice(0, 3).map((el) => describe(el, stageBox(el)));
   }
 
-  // ---------- dessin ----------
+  // ---------- drawing ----------
 
   function render() {
     renderLayer();
@@ -283,28 +287,30 @@ export function createReview(stage, { names, goto, onLayout }) {
   layer.addEventListener("pointerup", endStroke);
   layer.addEventListener("pointercancel", endStroke);
 
-  // ---------- panneau ----------
+  // ---------- panel ----------
 
   function buildPanel() {
     const node = document.createElement("aside");
     node.className = "review-panel";
+    // Hidden until review.css is loaded.
+    node.style.display = "none";
     node.innerHTML = `
-      <header><strong>Mode Édition</strong><span class="rv-where"></span></header>
+      <header><strong>${t("review.title")}</strong><span class="rv-where"></span></header>
       <div class="rv-name"></div>
       <div class="rv-tools">
-        ${Object.entries(TOOLS).map(([key, tool]) => `<button data-tool="${tool}">${TOOL_LABELS[tool]} <kbd>${key.toUpperCase()}</kbd></button>`).join("")}
-        <button data-action="undo">Annuler <kbd>Ctrl Z</kbd></button>
+        ${Object.entries(TOOLS).map(([key, tool]) => `<button data-tool="${tool}">${t(`review.${tool}`)} <kbd>${key.toUpperCase()}</kbd></button>`).join("")}
+        <button data-action="undo">${t("review.undo")} <kbd>Ctrl Z</kbd></button>
       </div>
-      <label for="rv-note">Note générale sur la slide</label>
-      <textarea id="rv-note" class="rv-note" rows="4" placeholder="Ce qui ne va pas sur cette slide, dans l'ensemble…"></textarea>
-      <label>Annotations de l'étape</label>
+      <label for="rv-note">${t("review.slideNote")}</label>
+      <textarea id="rv-note" class="rv-note" rows="4" placeholder="${t("review.slideNotePlaceholder")}"></textarea>
+      <label>${t("review.items")}</label>
       <ol class="rv-list"></ol>
-      <p class="rv-empty">Entourez un élément au feutre ou cliquez avec l'outil Note, puis décrivez le problème.</p>
-      <label>Slides avec des retours</label>
+      <p class="rv-empty">${t("review.empty")}</p>
+      <label>${t("review.index")}</label>
       <div class="rv-index"></div>
       <footer>
         <span class="rv-status"></span>
-        <button data-action="close">Quitter <kbd>E</kbd></button>
+        <button data-action="close">${t("review.quit")} <kbd>${keyLabel(settings.shortcuts.edit[0] ?? "e")}</kbd></button>
       </footer>`;
     node.addEventListener("mousedown", (event) => {
       if (event.target.closest("button")) event.preventDefault();
@@ -341,14 +347,14 @@ export function createReview(stage, { names, goto, onLayout }) {
   function renderPanel() {
     document.body.classList.toggle("reviewing", state.active);
     if (!state.active) return;
-    panel.querySelector(".rv-where").textContent = `slide ${state.index + 1}/${names.length} · étape ${state.step + 1}/${state.steps}`;
+    panel.querySelector(".rv-where").textContent = t("review.where", { slide: state.index + 1, slides: names.length, step: state.step + 1, steps: state.steps });
     panel.querySelector(".rv-name").textContent = names[state.index] ? `${names[state.index]}()` : "";
     panel.querySelectorAll("[data-tool]").forEach((b) => b.classList.toggle("on", b.dataset.tool === state.tool));
     const note = panel.querySelector(".rv-note");
     if (document.activeElement !== note) note.value = entry()?.note ?? "";
     const list = items();
     panel.querySelector(".rv-list").innerHTML = list
-      .map((a, i) => `<li><span class="rv-num">${i + 1}</span><input data-item="${i}" value="${escape(a.note)}" placeholder="${a.kind === "stroke" ? "Élément entouré" : "Note"} : quel problème ?" /><button data-remove="${i}" title="Supprimer">×</button></li>`)
+      .map((a, i) => `<li><span class="rv-num">${i + 1}</span><input data-item="${i}" value="${escape(a.note)}" placeholder="${t("review.problem", { kind: a.kind === "stroke" ? t("review.circled") : t("review.note") })}" /><button data-remove="${i}" title="${t("review.delete")}">×</button></li>`)
       .join("");
     panel.querySelector(".rv-empty").hidden = list.length > 0;
     renderIndex();
@@ -362,10 +368,10 @@ export function createReview(stage, { names, goto, onLayout }) {
         const steps = Object.keys(s.steps).filter((k) => s.steps[k].length).map(Number).sort((a, b) => a - b);
         const count = steps.reduce((n, k) => n + s.steps[k].length, 0) + (s.note.trim() ? 1 : 0);
         const here = Number(key) === state.index + 1 ? " here" : "";
-        const title = `${count} retour${count > 1 ? "s" : ""}`;
+        const title = t("review.count", { n: count });
         return `<button class="rv-chip${here}" data-goto="${key}.${steps[0] ?? 1}" title="${title}">Slide ${key}<small>${count}</small></button>`;
       });
-    panel.querySelector(".rv-index").innerHTML = chips.join("") || `<span class="rv-none">Aucun pour l'instant.</span>`;
+    panel.querySelector(".rv-index").innerHTML = chips.join("") || `<span class="rv-none">${t("review.none")}</span>`;
   }
 
   function setStatus(text, warn = false) {
@@ -398,30 +404,31 @@ export function createReview(stage, { names, goto, onLayout }) {
   });
 
   return {
-    /** Largeur réservée au panneau, à retirer de la zone de la scène. */
+    /** Enters or leaves edit mode (configurable key, `e` by default). */
+    toggle: (on) => toggle(on),
+    active: () => state.active,
+    /** Width reserved for the panel, removed from the stage area. */
     inset: () => (state.active ? PANEL_WIDTH : 0),
     update(index, step, steps) {
       Object.assign(state, { index, step, steps });
       live = null;
       render();
     },
-    /** Gère les touches du mode Édition ; renvoie vrai si la touche est consommée. */
+    /** Handles edit-mode keys and returns true when the key is consumed. */
     handleKey(event) {
       const key = event.key.toLowerCase();
       if (event.ctrlKey || event.metaKey) {
         if (state.active && key === "z") return undo(), true;
         return false;
       }
-      if (event.altKey) return false;
-      if (key === "e") return toggle(), true;
-      if (!state.active) return false;
+      if (event.altKey || !state.active) return false;
       if (key === "escape") return toggle(false), true;
       if (TOOLS[key]) return setTool(TOOLS[key]), true;
       return false;
     },
     api: {
       ready,
-      /** Affiche les annotations sans le panneau (captures de tools/review.py). */
+      /** Shows the annotations without the panel (tools/review.py captures). */
       overlay(on = true) {
         state.overlay = on;
         renderLayer();
@@ -438,7 +445,7 @@ function svgNode(tag, attrs, parent) {
   return node;
 }
 
-/** Les tracés sont stockés en chaîne compacte « x,y x,y … ». */
+/** Strokes are stored as a compact string "x,y x,y …". */
 function parsePoints(text) {
   return text.split(" ").map((pair) => pair.split(",").map(Number));
 }
@@ -457,7 +464,7 @@ function escape(text) {
   return String(text).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 }
 
-/** Description courte d'un élément : balise, classes, texte (LaTeX pour les formules), boîte. */
+/** Short description of an element: tag, classes, text (LaTeX for formulas), box. */
 function describe(el, box) {
   const result = { tag: el.tagName.toLowerCase() };
   const className = el.getAttribute("class");

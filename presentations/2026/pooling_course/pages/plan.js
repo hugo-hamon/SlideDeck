@@ -21,8 +21,8 @@ const SUPER_X = 1130;
 const DIM = 0.22;
 
 /**
- * Contexte du pied de page : les trois parties en mini-graphe (la partie en cours est pleine),
- * puis son titre et l'étape. `step` absent : introduction, avant la première partie.
+ * Footer context: the three parts as a mini graph (the current part is filled),
+ * then its title and the step. No `step`: introduction, before the first part.
  */
 export function where(step) {
   const part = step === undefined ? -1 : PARTS.findIndex(([, members]) => members.includes(step));
@@ -37,7 +37,7 @@ export function where(step) {
   return `${graph}<span style="color: ${COLORS[part]}">${PARTS[part][0]}</span><span class="sep">·</span><span>${STEPS[step][0]}</span>`;
 }
 
-/** Construit le plan dans son état final regroupé : frise, étapes, cadres, super-nœuds. */
+/** Builds the outline in its final grouped state: timeline, steps, frames, super-nodes. */
 function layout(root) {
   const heading = title(root, "Plan du cours");
   const layer = canvas(root);
@@ -83,7 +83,7 @@ function layout(root) {
   return { heading, spine, rows, parts, chain };
 }
 
-/** Le plan s'annonce étape par étape, puis se regroupe en trois parties comme un pooling. */
+/** The outline is announced step by step, then groups into three parts like a pooling. */
 export default function plan(root) {
   const { heading, spine, rows, parts, chain } = layout(root);
   const tl = gsap.timeline({ defaults: { ease: "expo.out" } });
@@ -111,7 +111,7 @@ export default function plan(root) {
   return tl;
 }
 
-/** Rappel du plan regroupé avant une nouvelle partie : tout s'estompe sauf l'étape `step`. */
+/** Recap of the grouped outline before a new part: everything fades except step `step`. */
 export function recap(step) {
   return function planRecap(root) {
     const { heading, spine, rows, parts, chain } = layout(root);

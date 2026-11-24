@@ -9,7 +9,7 @@ const KEEP = Math.ceil(RATIO * N);
 const BARS = { x: 1000, slot: 100, w: 62, base: 760, max: 330 };
 const fr = (v) => v.toFixed(2).replace(".", ",");
 
-/** Top-k : un score par nœud, on garde les k meilleurs et le sous-graphe qu'ils induisent. */
+/** Top-k: one score per node, keep the k best and the subgraph they induce. */
 export default function topk(root) {
   const heading = title(root, "Top-k");
   const steps = stepper(root);
@@ -23,7 +23,7 @@ export default function topk(root) {
   const kept = new Set(ranking.slice(0, KEEP));
   const dropped = [...SCORES.keys()].filter((i) => !kept.has(i));
 
-  // Diagramme des scores : une barre par nœud, dans l'ordre des nœuds puis triée.
+  // Score chart: one bar per node, in node order, then sorted.
   const barX = (slot) => BARS.x + slot * BARS.slot;
   const bars = SCORES.map((s, i) => {
     const group = svg(layer, "g");
@@ -42,7 +42,7 @@ export default function topk(root) {
   const keepName = label(root, "gardés", (BARS.x + cutX) / 2, BARS.base + 80, 28, "abs c-blue");
   const dropName = label(root, "écartés", (cutX + barX(N)) / 2, BARS.base + 80, 28, "abs c-red");
 
-  // Pondération des attributs gardés par tanh(y), puis anneaux et étiquettes du graphe réduit.
+  // Kept attributes weighted by tanh(y), then rings and labels of the reduced graph.
   const paper = theme("paper");
   const gates = [...kept].map((i) => label(root, tex(String.raw`\times ${fr(Math.tanh(SCORES[i]))}`), points[i].x, points[i].y - 46, 26));
   const rings = [...kept].map((i) => svg(layer, "circle", { cx: points[i].x, cy: points[i].y, r: 31, style: "fill: none; stroke: var(--ink); stroke-width: 3" }));
@@ -71,7 +71,7 @@ export default function topk(root) {
   tl.from(ref, { opacity: 0, duration: 0.6 }, "<");
   pause(tl);
 
-  // SEL : un score appris par projection, puis tri et seuil.
+  // SEL: a score learned by projection, then sorting and threshold.
   tl.addLabel("sel");
   steps.focus(tl, 0, "sel");
   show(formulas[0], "sel+=0.2");
@@ -84,7 +84,7 @@ export default function topk(root) {
   tl.from(rings, { scale: 0, transformOrigin: "50% 50%", duration: 0.5, ease: "back.out(2)", stagger: 0.06 }, "sel+=3.1");
   pause(tl);
 
-  // RED : les nœuds écartés disparaissent ; les gardés sont pondérés par tanh(y).
+  // RED: dropped nodes disappear while kept ones are weighted by tanh(y).
   tl.addLabel("red");
   steps.focus(tl, 1, "red");
   hide(formulas[0], "red");
@@ -97,7 +97,7 @@ export default function topk(root) {
   });
   pause(tl);
 
-  // CON : on garde seulement les arêtes entre nœuds gardés.
+  // CON: keep only the edges between kept nodes.
   tl.addLabel("con");
   steps.focus(tl, 2, "con");
   hide(formulas[1], "con");

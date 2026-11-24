@@ -7,7 +7,7 @@ const px = (value) => (value === undefined ? "" : `${value}px`);
 export const COLORS = ["var(--blue)", "var(--green)", "var(--red)"];
 export const FILLS = ["var(--blue-fill)", "var(--green-fill)", "var(--red-fill)"];
 
-/** Crée un élément SVG ; les couleurs passent par `style` pour lire les variables CSS. */
+/** Creates an SVG element, with colours set through `style` so that CSS variables are read. */
 export function svg(parent, tag, attrs = {}) {
   const node = document.createElementNS(NS, tag);
   for (const [key, value] of Object.entries(attrs)) node.setAttribute(key, value);
@@ -15,7 +15,7 @@ export function svg(parent, tag, attrs = {}) {
   return node;
 }
 
-/** Bloc HTML positionné en pixels dans la scène 1920×1080. */
+/** HTML block positioned in pixels in the 1920×1080 stage. */
 export function div(parent, className, { x, y, w, h, html, style } = {}) {
   const node = document.createElement("div");
   node.className = className;
@@ -25,7 +25,7 @@ export function div(parent, className, { x, y, w, h, html, style } = {}) {
   return node;
 }
 
-/** Calque SVG plein cadre, avec une tête de flèche partagée. */
+/** Full-frame SVG layer, with a shared arrow head. */
 export function canvas(root) {
   const node = svg(root, "svg", { class: "canvas", viewBox: "0 0 1920 1080" });
   const marker = svg(svg(node, "defs"), "marker", {
@@ -45,12 +45,12 @@ export function title(root, text, top) {
   return div(root, "title", { html: text, style: top === undefined ? {} : { top: px(top) } });
 }
 
-/** Rend une expression LaTeX ; `\htmlClass{c-blue}{…}` colore avec les jetons du thème. */
+/** Renders a LaTeX expression, where `\htmlClass{c-blue}{…}` colours with the theme tokens. */
 export function tex(expression, display = false) {
   return katex.renderToString(expression, { displayMode: display, trust: true, strict: "ignore" });
 }
 
-/** Texte ou formule centré sur (x, y). */
+/** Text or formula centred on (x, y). */
 export function label(parent, html, x, y, size = 30, className = "abs") {
   const node = div(parent, className, { x, y, html, style: { fontSize: px(size) } });
   gsap.set(node, { xPercent: -50, yPercent: -50 });
@@ -65,7 +65,7 @@ export function arrow(parent, x1, y1, x2, y2) {
   });
 }
 
-/** Trace des contours comme au crayon. */
+/** Draws outlines as if with a pencil. */
 export function drawIn(tl, nodes, vars = {}, position) {
   const list = [nodes].flat();
   for (const node of list) {
@@ -75,14 +75,14 @@ export function drawIn(tl, nodes, vars = {}, position) {
   return tl.to(list, { strokeDashoffset: 0, duration: 0.8, ease: "power2.inOut", ...vars }, position);
 }
 
-/** Fait pousser une flèche depuis son origine, tête comprise. */
+/** Grows an arrow from its origin, head included. */
 export function growArrow(tl, line, vars = {}, position) {
   const x1 = line.getAttribute("x1");
   const y1 = line.getAttribute("y1");
   return tl.from(line, { attr: { x2: x1, y2: y1 }, opacity: 0, duration: 0.5, ease: "power3.out", ...vars }, position);
 }
 
-/** Pavé translucide en perspective cavalière, centré verticalement sur `y`. */
+/** Translucent box in oblique projection, vertically centred on `y`. */
 export function block(parent, { x, y, w, h, dx = 60, dy = -48, color = 0 }) {
   const group = svg(parent, "g");
   const top = y - h / 2;
@@ -100,7 +100,7 @@ export function block(parent, { x, y, w, h, dx = 60, dy = -48, color = 0 }) {
   return group;
 }
 
-/** Pastille numérotée, comme les repères d'un schéma d'article. */
+/** Numbered badge, like the markers of a paper figure. */
 export function badge(parent, x, y, text, r = 20) {
   const group = svg(parent, "g");
   svg(group, "circle", { cx: x, cy: y, r, style: "fill: var(--panel); stroke: var(--ink); stroke-width: 2" });

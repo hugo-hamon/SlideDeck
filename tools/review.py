@@ -1,8 +1,8 @@
-"""Rassemble les retours du mode Édition : captures annotées + résumé Markdown.
+"""Gathers edit-mode feedback: annotated captures + a Markdown summary.
 
-Les retours sont saisis dans le navigateur (touche `e`) et enregistrés par serve.py dans
-<présentation>/feedback.json. Ce script produit .inspection/review/ :
-une image par étape annotée (annotations dessinées dessus) et review.md.
+Feedback is entered in the browser (`e` key) and saved by serve.py to
+<presentation>/feedback.json. This script produces .inspection/review/:
+one image per annotated step (annotations drawn on it) and review.md.
 """
 
 import argparse
@@ -15,33 +15,33 @@ from capture import ROOT, serve
 from playwright.sync_api import sync_playwright
 
 FEEDBACK = "feedback.json"
-KINDS = {"stroke": "Entouré", "note": "Note"}
+KINDS = {"stroke": "Circled", "note": "Note"}
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Lire les retours saisis en mode Édition.")
+    parser = argparse.ArgumentParser(description="Read the feedback entered in edit mode.")
     parser.add_argument(
-        "project", type=Path, help="dossier de la présentation, ex. presentations/2026/demo"
+        "project", type=Path, help="presentation folder, e.g. presentations/2026/demo"
     )
     parser.add_argument(
         "--clear",
         action="store_true",
-        help="archiver feedback.json dans .inspection/ puis le supprimer (retours traités)",
+        help="archive feedback.json into .inspection/ then delete it (feedback handled)",
     )
-    parser.add_argument("--no-shots", action="store_true", help="résumé seul, sans capture")
+    parser.add_argument("--no-shots", action="store_true", help="summary only, no captures")
     return parser.parse_args()
 
 
 def describe(target: dict) -> str:
-    """`div.title` « Plan » @ (x, y, w×h)."""
+    """`div.title` "Outline" @ (x, y, w×h)."""
     name = target["tag"] + "".join(f".{c}" for c in target.get("class", "").split()[:2])
-    text = f" « {target['text']} »" if target.get("text") else ""
+    text = f' "{target["text"]}"' if target.get("text") else ""
     x, y, w, h = target["box"]
     return f"`{name}`{text} @ ({x}, {y}, {w}×{h})"
 
 
 def shoot(project: Path, wanted: list[tuple[int, int]], output: Path) -> dict:
-    """Capture chaque étape demandée avec ses annotations ; renvoie le nombre d'étapes réel."""
+    """Captures every requested step with its annotations and returns the actual step counts."""
     server = serve()
     url = f"http://127.0.0.1:{server.server_port}/{project.relative_to(ROOT).as_posix()}/#/1/1"
     counts: dict[int, int] = {}
@@ -73,13 +73,13 @@ def main() -> None:
     project = (ROOT / args.project).resolve()
     source = project / FEEDBACK
     if not source.exists():
-        print("Aucun retour (feedback.json absent).")
+        print("No feedback (no feedback.json).")
         return
     if args.clear:
         archive = project / ".inspection" / "feedback-archive"
         archive.mkdir(parents=True, exist_ok=True)
         shutil.move(source, archive / time.strftime("%Y%m%d-%H%M%S.json"))
-        print(f"Retours archivés dans {archive}")
+        print(f"Feedback archived in {archive}")
         return
 
     data = json.loads(source.read_text())
@@ -88,33 +88,33 @@ def main() -> None:
     shutil.rmtree(output, ignore_errors=True)
     output.mkdir(parents=True)
 
-    # Une capture par étape annotée ; une capture de la dernière étape (0) si seule une note.
+    # One capture per annotated step, plus one of the last step (0) when there is only a note.
     wanted = [(n, int(step)) for n, slide in slides for step in sorted(slide["steps"], key=int)] + [
         (n, 0) for n, slide in slides if not slide["steps"]
     ]
     counts = {} if args.no_shots else shoot(project, wanted, output)
 
-    lines = [f"# Retours — {project.name}", "", f"Mis à jour : {data.get('updated', '?')}", ""]
+    lines = [f"# Feedback — {project.name}", "", f"Updated: {data.get('updated', '?')}", ""]
     for n, slide in slides:
         name = f" · `{slide['name']}()`" if slide.get("name") else ""
         lines += [f"## Slide {n}{name}", ""]
         if not args.no_shots and n not in counts:
-            lines += ["⚠ Cette slide n'existe plus.", ""]
+            lines += ["⚠ This slide no longer exists.", ""]
         if slide.get("note", "").strip():
-            lines += [f"Note générale : « {slide['note'].strip()} »", ""]
+            lines += [f'General note: "{slide["note"].strip()}"', ""]
             if not slide["steps"]:
-                lines += [f"Capture : `s{n:02d}-e00.png` (dernière étape)", ""]
+                lines += [f"Capture: `s{n:02d}-e00.png` (last step)", ""]
         for step in sorted(slide["steps"], key=int):
             warn = ""
             if n in counts and int(step) > counts[n]:
-                warn = f" ⚠ la slide n'a plus que {counts[n]} étapes"
-            lines += [f"### Étape {step} — `s{n:02d}-e{int(step):02d}.png`{warn}", ""]
+                warn = f" ⚠ the slide now has only {counts[n]} steps"
+            lines += [f"### Step {step} — `s{n:02d}-e{int(step):02d}.png`{warn}", ""]
             for i, item in enumerate(slide["steps"][step], 1):
                 note = item.get("note", "").strip()
-                comment = f"« {note} »" if note else "(sans commentaire)"
+                comment = f'"{note}"' if note else "(no comment)"
                 if item["kind"] == "stroke":
                     x, y, w, h = item["box"]
-                    where = f"zone ({x}, {y}, {w}×{h})"
+                    where = f"area ({x}, {y}, {w}×{h})"
                 else:
                     where = f"point ({item['at'][0]}, {item['at'][1]})"
                 lines.append(
@@ -125,7 +125,7 @@ def main() -> None:
     report = "\n".join(lines)
     (output / "review.md").write_text(report)
     print(report)
-    print(f"Captures et résumé : {output}")
+    print(f"Captures and summary: {output}")
 
 
 if __name__ == "__main__":

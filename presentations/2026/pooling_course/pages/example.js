@@ -15,7 +15,7 @@ const REDUCED = { x: 1500, y: 680 };
 const FINAL = { fine: { x: 488, y: 360 }, reduced: { x: 1432, y: 360 }, egoY: 590, captionY: 800 };
 const SUPER_R = 34;
 
-/** Classes de voisinages enracinés (signature simple) : une nuance d'encre par classe. */
+/** Classes of rooted neighbourhoods (simple signature): one ink shade per class. */
 function shades() {
   const keys = NET.nodes.map((_, i) => {
     const near = new Set([i]);
@@ -43,7 +43,7 @@ function cells(parent, count, center, colors) {
 
 const cellCenter = (rect) => ({ x: +rect.getAttribute("x") + CELL.w / 2, y: +rect.getAttribute("y") + CELL.h / 2 });
 
-/** Un voisinage entre dans le GNN, une pastille en sort et remplit la case de son embedding. */
+/** A neighbourhood enters the GNN, a dot comes out and fills its embedding cell. */
 function pass(tl, { packet, box, cell, opacity, token, at, speed = 1, near = true }) {
   const d = (s) => s * speed;
   const nearVars = fit(box, NEAR);
@@ -55,7 +55,7 @@ function pass(tl, { packet, box, cell, opacity, token, at, speed = 1, near = tru
     if (at === undefined) pause(tl);
   }
   tl.to(packet, { ...(near ? { x: inVars.x, y: inVars.y, scale: inVars.scale } : inVars), duration: d(0.7), ease: "power3.inOut" }, at === undefined ? ">" : ">-0.1");
-  // Une fois dans la boîte, le voisinage disparaît : rien ne s'accumule derrière le GNN.
+  // Once inside the box, the neighbourhood disappears: nothing piles up behind the GNN.
   tl.to(packet, { opacity: 0, duration: d(0.1) }, ">");
   tl.to(token, { scale: 1, duration: d(0.35), ease: "back.out(2.5)" }, ">-0.05");
   const target = cellCenter(cell);
@@ -64,7 +64,7 @@ function pass(tl, { packet, box, cell, opacity, token, at, speed = 1, near = tru
   tl.to(token, { opacity: 0, duration: d(0.2) }, "<");
 }
 
-/** Même GNN, deux échelles : voisinages de personnes, puis communautés poolées. */
+/** Same GNN, two scales: neighbourhoods of people, then pooled communities. */
 export default function example(root) {
   const heading = title(root, "Différence de représentation avant et après pooling");
   const layer = canvas(root);
@@ -91,12 +91,12 @@ export default function example(root) {
   const fineLabel = label(root, "21 nœuds → 21 embeddings", FINE.x, FINE.y - 72, 32);
   const reduced = cells(outputs, 3, REDUCED, COLORS);
   const reducedLabel = label(root, "3 communautés → 3 embeddings", REDUCED.x, REDUCED.y - 72, 32);
-  const caption = label(root, "1 case = l’embedding d’un nœud (schéma)", 960, 960, 28, "abs muted");
+  const caption = label(root, "1 case = l’embedding d’un nœud", 960, 960, 28, "abs muted");
   const opacity = shades();
 
   const tl = gsap.timeline({ defaults: { ease: "expo.out" } });
 
-  // 1. Le graphe de l'accueil glisse à gauche.
+  // 1. The welcome graph slides to the left.
   tl.addLabel("move");
   graph.nodes.forEach((node, i) => {
     tl.from(node, { attr: { cx: START.nodes[i].x, cy: START.nodes[i].y }, duration: 1.3, ease: "power3.inOut" }, "move");
@@ -108,7 +108,7 @@ export default function example(root) {
   tl.from(heading, { opacity: 0, y: 24, duration: 0.8 }, "move+=0.5");
   pause(tl);
 
-  // 2–5. Chaque voisinage à un saut passe dans le GNN ; le premier lentement.
+  // 2–5. Each one-hop neighbourhood goes through the GNN, the first one slowly.
   tl.from(box, { opacity: 0, scale: 0.9, transformOrigin: "50% 50%", duration: 0.6 });
   tl.from([hint, fineLabel, caption], { opacity: 0, y: 12, duration: 0.6, stagger: 0.08 }, "<0.1");
   tl.from(fine.rects, { opacity: 0, duration: 0.3, stagger: 0.02 }, "<0.1");
@@ -127,11 +127,11 @@ export default function example(root) {
   });
   pause(tl);
 
-  // 6. Trois communautés apparaissent, de gauche à droite.
+  // 6. Three communities appear, from left to right.
   tl.from([0, 2, 1].map((c) => hulls[c]), { scale: 0.7, opacity: 0, transformOrigin: "50% 50%", duration: 0.8, stagger: 0.35 });
   pause(tl);
 
-  // 7. Chaque communauté se contracte en un super-nœud.
+  // 7. Each community contracts into a super-node.
   tl.addLabel("collapse");
   graph.nodes.forEach((node, i) => {
     const { x, y } = NET.centroids[NET.nodes[i].c];
@@ -151,7 +151,7 @@ export default function example(root) {
   tl.to([...graph.nodes, ...graph.edges], { opacity: 0, duration: 0.2 }, "collapse+=1.1");
   pause(tl);
 
-  // 8. Même GNN sur le graphe réduit : chaque super-nœud porte le contenu de sa communauté.
+  // 8. Same GNN on the coarse graph: each super-node carries its community's content.
   tl.from(reducedLabel, { opacity: 0, y: 12, duration: 0.5 });
   tl.from(reduced.rects, { opacity: 0, duration: 0.3, stagger: 0.05 }, "<");
   tl.addLabel("coarse");
@@ -166,7 +166,7 @@ export default function example(root) {
   });
   pause(tl);
 
-  // 9. Deux échelles côte à côte ; le super-nœud bleu révèle son contenu.
+  // 9. Both scales side by side, then the blue super-node reveals its content.
   const fineShift = { x: FINAL.fine.x - FINE.x, y: FINAL.fine.y - FINE.y };
   const reducedShift = { x: FINAL.reduced.x - REDUCED.x, y: FINAL.reduced.y - REDUCED.y };
   const fineEgo = ego(finale, NET, 0);
@@ -174,7 +174,7 @@ export default function example(root) {
   const blue = { x: FINAL.reduced.x - 100, y: FINAL.egoY };
   const others = [{ x: FINAL.reduced.x + 190, y: FINAL.egoY - 95 }, { x: FINAL.reduced.x + 190, y: FINAL.egoY + 95 }];
   const ZOOM_R = 112;
-  // Point du bord du cercle zoomé, dans la direction de p.
+  // Point on the zoomed circle's edge, in the direction of p.
   const toward = (p, r) => {
     const d = Math.hypot(p.x - blue.x, p.y - blue.y);
     return { x1: blue.x + ((p.x - blue.x) * r) / d, y1: blue.y + ((p.y - blue.y) * r) / d };
