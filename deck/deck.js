@@ -1,6 +1,6 @@
 import { gsap } from "gsap";
 import { createLaser } from "./laser.js";
-import { mountSlide, renderFooter } from "./mount.js";
+import { mountSlide, renderFooter, setPage } from "./mount.js";
 import { createNotes, noteKeys } from "./notes.js";
 import { createOptions } from "./options.js";
 import { createOverview } from "./overview.js";
@@ -28,6 +28,13 @@ export function section(slide, html) {
   return wrapped;
 }
 
+/** Waits for the theme's body and heading fonts, so that the first measures are right. */
+export async function fontsReady() {
+  const style = getComputedStyle(document.querySelector(".stage"));
+  const families = ["--serif", "--display"].map((name) => style.getPropertyValue(name).trim()).filter(Boolean);
+  await Promise.all(families.flatMap((family) => ["400", "600"].map((weight) => document.fonts.load(`${weight} 44px ${family}`).catch(() => []))));
+}
+
 /** Starts the presentation: each slide is a function (element) => GSAP timeline. */
 export function startDeck(allSlides, { footer } = {}) {
   // HTML export: only the chosen slides are kept, with their original numbers.
@@ -35,6 +42,8 @@ export function startDeck(allSlides, { footer } = {}) {
   const numbers = kept?.length ? kept : allSlides.map((_, i) => i + 1);
   const slides = numbers.map((n) => allSlides[n - 1]);
   const stage = document.querySelector(".stage");
+  // Total number of slides, for the themes that show "3 / 17" (CSS `var(--total)`).
+  document.documentElement.style.setProperty("--total", `"${allSlides.length}"`);
   const footerNode = footer ? renderFooter(stage, footer) : null;
   const state = { index: -1, step: 0, current: null, tween: null };
   loadStyle("options.css");
@@ -102,6 +111,8 @@ export function startDeck(allSlides, { footer } = {}) {
       state.tween = tl.tweenFromTo(from, stops[target], { delay: changed ? FADE * 0.6 : 0 });
     } else tl.seek(stops[target]);
     state.step = target;
+    // Position in the talk, for the themes that draw a progress bar (CSS `var(--progress)`).
+    stage.style.setProperty("--progress", numbers[index] / allSlides.length);
     pen.setSlide(index);
     if (footerNode) updateFooter(footerNode, numbers[index], slides[index].context ?? "", animate);
     review.update(index, target, stops.length);
@@ -204,7 +215,7 @@ export function startDeck(allSlides, { footer } = {}) {
 
 /** Page number and context, which cross-fades when the part changes. */
 function updateFooter(node, number, html, animate) {
-  node.querySelector(".page").textContent = String(number).padStart(2, "0");
+  setPage(node, number);
   const context = node.querySelector(".context");
   if (context.dataset.html === html) return;
   context.dataset.html = html;

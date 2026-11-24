@@ -52,7 +52,14 @@ export function renderFooter(stage, items) {
 /** Static footer (printing): number and context without animation. */
 export function staticFooter(stage, items, number, context) {
   const node = renderFooter(stage, items);
-  node.querySelector(".page").textContent = String(number).padStart(2, "0");
+  setPage(node, number);
   node.querySelector(".context").innerHTML = context;
   return node;
+}
+
+/** Page number: padded in the text, raw in `data-n` for the themes that rewrite it. */
+export function setPage(footer, number) {
+  const page = footer.querySelector(".page");
+  page.textContent = String(number).padStart(2, "0");
+  page.dataset.n = number;
 }

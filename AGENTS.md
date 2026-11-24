@@ -15,7 +15,8 @@ code et rapidité d'itération. Ces règles s'appliquent à Claude Code, Codex e
 
 ```text
 SlideDeck/
-├── deck/                 # moteur partagé : deck.js, components.js, theme.css, review.js (mode Édition),
+├── deck/                 # moteur partagé : deck.js, components.js, theme.css, themes/*.css (modèles),
+│                         # review.js (mode Édition),
 │                         # options.js (touche o : export HTML/GIF, raccourcis), pen.js (stylo), export.js, ui.js,
 │                         # home.* (page d'accueil de serve.py : liste, tags, archives),
 │                         # presenter.js + notes.js (touche s), overview.js (g), laser.js (l), print.js (PDF), mount.js,
@@ -31,7 +32,11 @@ SlideDeck/
     └── README.md         # intention, public, commandes
 ```
 
-- Nouvelle présentation : `python3 tools/new.py presentations/<année>/<nom> --title "…"`.
+- Nouvelle présentation : `python3 tools/new.py presentations/<année>/<nom> --title "…" [--theme madrid]`.
+  Un modèle est une feuille `deck/themes/<id>.css` liée après `theme.css` : elle redéfinit les
+  jetons (`--paper`, `--ink`, `--blue`…, `--serif`, `--display`) et restyle `title`, `cover`,
+  `bullets`, `box` et le pied de page. Dans une présentation à thème, utiliser ces composants
+  plutôt que des titres positionnés à la main, et appeler `title()` sans `top`.
 - Fonction utile à une seule présentation : `helpers.js` dans son dossier.
 - Fonction réutilisée par plusieurs présentations : `deck/components.js`.
   Chercher avant de créer, **réutiliser avant de dupliquer**, API courte et explicite.

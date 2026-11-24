@@ -14,6 +14,7 @@ from typing import Any
 from urllib.parse import parse_qs, unquote, urlsplit
 
 import library
+import new
 
 ROOT = Path(__file__).resolve().parent.parent
 WATCHED = {".html", ".css", ".js", ".svg", ".json", ".png", ".jpg"}
@@ -176,12 +177,32 @@ class DeckHandler(SimpleHTTPRequestHandler):
             super().do_GET()
         elif path == "/__library":
             send_json(self, library.entries())
+        elif path.startswith("/__template/"):
+            self.template_get(path.removeprefix("/__template/"))
         elif (target := feedback_file(self.path)) is not None:
             send_feedback(self, target)
         elif "/__export/" in self.path:
             self.export_get()
         else:
             super().do_GET()
+
+    def template_get(self, rest: str) -> None:
+        """Template preview of the home page: /__template/<theme>/<file>, placeholders filled."""
+        theme, _, name = rest.partition("/")
+        if name in ("__feedback", "__notes"):
+            send_json(self, {})
+            return
+        file = (new.TEMPLATE / (name or "index.html")).resolve()
+        if theme not in new.themes() or new.TEMPLATE not in file.parents or not file.is_file():
+            self.send_error(404)
+            return
+        values = new.values_for("", "Titre de la présentation", theme, "Ada Lovelace")
+        body = new.fill(file.read_text(), values).encode()
+        self.send_response(200)
+        self.send_header("Content-Type", self.guess_type(str(file)))
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
 
     def export_get(self) -> None:
         """GIF export from the options window: availability, progress, file."""
@@ -210,7 +231,7 @@ class DeckHandler(SimpleHTTPRequestHandler):
             self.send_error(404)
 
     def library_post(self, action: str) -> None:
-        """Home page: tags / archive / star / details, creation and duplication."""
+        """Home page: tags / archive / star / details, creation, duplication and deletion."""
         try:
             data = json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0))) or b"{}")
             if action == "update":
@@ -219,6 +240,8 @@ class DeckHandler(SimpleHTTPRequestHandler):
                 send_json(self, {"path": library.create(data)})
             elif action == "duplicate":
                 send_json(self, {"path": library.duplicate(data)})
+            elif action == "delete":
+                send_json(self, {"path": library.delete(data)})
             else:
                 self.send_error(404)
         except ValueError as error:

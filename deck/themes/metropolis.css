@@ -1,0 +1,74 @@
+/* Metropolis: inspired by the modern Beamer theme (dark teal bar, orange progress, Fira Sans). */
+@import url("https://fonts.googleapis.com/css2?family=Fira+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap");
+
+:root {
+  --paper: #fafafa;
+  --panel: #ffffff;
+  --ink: #23373b;
+  --ink-soft: #5d7175;
+  --line: #d3dadb;
+  --blue: #2f6c7f;
+  --blue-fill: rgba(47, 108, 127, 0.16);
+  --blue-soft: #e4eef0;
+  --green: #14b03d;
+  --green-fill: rgba(20, 176, 61, 0.16);
+  --red: #eb811b;
+  --red-fill: rgba(235, 129, 27, 0.16);
+  --serif: "Fira Sans", "Helvetica Neue", Arial, sans-serif;
+  --teal: #23373b;
+}
+
+.stage { font-weight: 300; }
+
+.title {
+  top: 0;
+  height: 128px;
+  display: flex;
+  align-items: center;
+  padding: 0 64px;
+  background: var(--teal);
+  color: #fafafa;
+  text-align: left;
+  font-size: 56px;
+  font-weight: 400;
+}
+
+/* Progress bar under the frame title (current slide / total). */
+.stage:not(:has(.cover))::before {
+  content: "";
+  position: absolute;
+  top: 128px;
+  left: 0;
+  width: calc(100% * var(--progress, 0));
+  height: 6px;
+  background: var(--red);
+}
+
+.cover { inset: 0 180px 80px; align-items: flex-start; text-align: left; gap: 10px; }
+.cover-title { align-items: flex-start; align-self: stretch; gap: 14px; margin-bottom: 24px; }
+.cover-heading { font-size: 88px; font-weight: 400; }
+.cover-subtitle { color: var(--ink); font-size: 44px; font-style: normal; font-weight: 300; }
+.cover-title::after { width: 100%; height: 4px; margin-top: 28px; background: var(--red); }
+.cover-author { font-size: 38px; font-weight: 400; }
+.cover-institute, .cover-date { font-size: 32px; }
+
+.bullets li::before {
+  left: 10px;
+  width: 0;
+  height: 0;
+  border-radius: 0;
+  border-top: 9px solid transparent;
+  border-bottom: 9px solid transparent;
+  border-left: 14px solid var(--red);
+  background: none;
+}
+
+.box { border: 0; border-radius: 0; background: #eef1f1; }
+.box-title { padding: 14px 28px; background: #e1e6e6; color: var(--c); font-size: 36px; font-weight: 500; }
+.box-blue .box-title { color: var(--teal); }
+.box-body { padding: 18px 28px 22px; }
+
+.footer { left: 64px; right: 48px; bottom: 22px; color: var(--ink-soft); }
+.footer .info { visibility: hidden; }
+.footer .page { border: 0; color: var(--ink); font-size: 0; }
+.footer .page::before { content: attr(data-n); font-size: 26px; }

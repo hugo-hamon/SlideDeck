@@ -1,0 +1,80 @@
+/* Aurora: light pastel gradient mesh, frosted-glass cards, rounded geometric sans. */
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap");
+
+:root {
+  --paper: #f7f7fb;
+  --panel: rgba(255, 255, 255, 0.7);
+  --ink: #1c1b3a;
+  --ink-soft: #625f85;
+  --line: rgba(28, 27, 58, 0.12);
+  --blue: #5b5bd6;
+  --blue-fill: rgba(91, 91, 214, 0.16);
+  --blue-soft: rgba(255, 255, 255, 0.7);
+  --green: #12a594;
+  --green-fill: rgba(18, 165, 148, 0.16);
+  --red: #e5484d;
+  --red-fill: rgba(229, 72, 77, 0.14);
+  --serif: "Plus Jakarta Sans", system-ui, sans-serif;
+}
+
+.stage {
+  background:
+    radial-gradient(760px 560px at 0% 0%, rgba(255, 170, 210, 0.55), transparent 65%),
+    radial-gradient(820px 620px at 100% 10%, rgba(150, 180, 255, 0.6), transparent 65%),
+    radial-gradient(900px 600px at 70% 110%, rgba(140, 235, 210, 0.55), transparent 65%),
+    var(--paper);
+}
+
+.title { top: 80px; left: 140px; right: 140px; text-align: left; font-size: 64px; font-weight: 800; letter-spacing: -0.02em; }
+
+.cover-title { gap: 22px; margin-bottom: 40px; }
+.cover-title::after { display: none; }
+.cover-heading {
+  font-size: 108px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  background: linear-gradient(100deg, var(--blue) 0%, #c04fd8 50%, var(--red) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.cover-subtitle { font-size: 42px; font-style: normal; font-weight: 500; }
+.cover-author, .cover-institute, .cover-date {
+  padding: 8px 26px;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.55);
+  color: var(--ink);
+  font-size: 30px;
+}
+.cover-author { font-weight: 700; }
+
+.bullets { font-weight: 500; }
+.bullets li::before { width: 18px; height: 18px; background: linear-gradient(135deg, var(--blue), #c04fd8); }
+
+.box {
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  border-radius: 30px;
+  background: rgba(255, 255, 255, 0.58);
+  box-shadow: 0 24px 60px rgba(60, 60, 130, 0.14);
+  backdrop-filter: blur(18px);
+}
+.box-title { display: flex; align-items: center; gap: 14px; padding: 26px 32px 0; font-size: 34px; font-weight: 700; }
+.box-title::before { content: ""; width: 14px; height: 14px; border-radius: 50%; background: var(--c); box-shadow: 0 0 0 6px var(--c-fill); }
+.box-body { padding: 12px 32px 28px; }
+
+.footer {
+  left: 50%;
+  right: auto;
+  bottom: 26px;
+  height: 48px;
+  gap: 26px;
+  padding: 0 10px 0 28px;
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.6);
+  color: var(--ink-soft);
+  transform: translateX(-50%);
+  backdrop-filter: blur(12px);
+}
+.footer .page { padding: 2px 14px; border: 0; border-radius: 99px; background: var(--ink); color: #fff; text-align: center; }

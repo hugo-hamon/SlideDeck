@@ -113,3 +113,38 @@ export function badge(parent, x, y, text, r = 20) {
   value.textContent = text;
   return group;
 }
+
+/**
+ * Title page: the title (and subtitle) block, then author, institute and date.
+ * Every part is optional, and the themes (deck/themes/*.css) restyle the whole page.
+ */
+export function cover(root, { title: heading, subtitle, author, institute, date } = {}) {
+  const node = div(root, "cover");
+  const block = div(node, "cover-title");
+  div(block, "cover-heading", { html: heading ?? "" });
+  if (subtitle) div(block, "cover-subtitle", { html: subtitle });
+  for (const [name, html] of Object.entries({ author, institute, date })) if (html) div(node, `cover-${name}`, { html });
+  return node;
+}
+
+/** Bulleted list at (x, y), `w` wide: the theme draws the markers. Returns the <li> items. */
+export function bullets(root, items, { x, y, w, size } = {}) {
+  const list = document.createElement("ul");
+  list.className = "bullets";
+  Object.assign(list.style, { left: px(x), top: px(y), width: px(w), fontSize: px(size) });
+  for (const html of items) {
+    const item = document.createElement("li");
+    item.innerHTML = html;
+    list.appendChild(item);
+  }
+  root.appendChild(list);
+  return [...list.children];
+}
+
+/** Titled block, like a Beamer block: color 0 (definition), 1 (example) or 2 (alert). */
+export function box(root, { x, y, w, h, title: heading, html, color = 0 }) {
+  const node = div(root, `box box-${["blue", "green", "red"][color]}`, { x, y, w, h });
+  if (heading) div(node, "box-title", { html: heading });
+  div(node, "box-body", { html });
+  return node;
+}

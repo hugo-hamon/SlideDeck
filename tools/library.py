@@ -128,8 +128,9 @@ def create(data: dict[str, Any]) -> str:
         raise ValueError("invalid folder name (lowercase letters, digits and _)")
     path = f"presentations/{year}/{name}"
     command = [sys.executable, str(ROOT / "tools" / "new.py"), path]
-    if str(data.get("title", "")).strip():
-        command += ["--title", str(data["title"]).strip()]
+    for key in ("title", "theme", "author"):
+        if str(data.get(key, "")).strip():
+            command += [f"--{key}", str(data[key]).strip()[:120]]
     result = subprocess.run(command, cwd=ROOT, capture_output=True, text=True)
     if result.returncode != 0:
         raise ValueError(result.stderr.strip() or result.stdout.strip() or "new.py failed")
@@ -156,3 +157,16 @@ def duplicate(data: dict[str, Any]) -> str:
     meta.pop("archived", None)
     (target / META).write_text(json.dumps(meta, indent=2, ensure_ascii=False) + "\n")
     return target.relative_to(ROOT).as_posix()
+
+
+def delete(data: dict[str, Any]) -> str:
+    """Permanently deletes a presentation folder, then its year folder if left empty."""
+    folder = folder_of(str(data.get("path", "")))
+    if folder is None:
+        raise ValueError("presentation not found")
+    path = folder.relative_to(ROOT).as_posix()
+    shutil.rmtree(folder)
+    year = folder.parent
+    if year != PRESENTATIONS and not any(year.iterdir()):
+        year.rmdir()
+    return path

@@ -149,6 +149,13 @@ async function inlineImages(source, base, warnings) {
 /** Self-contained CSS: woff2 fonts and images as data: URLs, Latin subsets only. */
 async function inlineCss(css, href) {
   let out = css;
+  // Themes load their fonts with @import: the imported sheet is inlined in its place.
+  for (const [all, , path] of [...out.matchAll(/@import\s+url\((["']?)([^)"']+)\1\)\s*;/g)]) {
+    const url = new URL(path, href);
+    try {
+      out = out.replace(all, await inlineCss(await text(url), url));
+    } catch {}
+  }
   // Google Fonts: each block is preceded by its subset (/* latin */…).
   if (/\/\*\s*[\w-]+\s*\*\/\s*@font-face/.test(out)) {
     out = out.replace(/\/\*\s*([\w-]+)\s*\*\/\s*(@font-face\s*\{[^}]*\})/g, (all, subset) => (FONT_SUBSETS.has(subset) ? all : ""));

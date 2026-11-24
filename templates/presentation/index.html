@@ -11,6 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" />
     <link rel="stylesheet" href="/deck/theme.css" />
+    <link rel="stylesheet" href="/deck/themes/{{theme}}.css" />
     <script type="importmap">
       {
         "imports": {
@@ -24,11 +25,13 @@
   <body>
     <main class="stage"></main>
     <script type="module">
-      import { startDeck } from "deck/deck.js";
+      import { fontsReady, startDeck } from "deck/deck.js";
       import cover from "./pages/cover.js";
+      import outline from "./pages/outline.js";
+      import content from "./pages/content.js";
 
-      await document.fonts.load("44px 'EB Garamond'");
-      startDeck([cover], { footer: ["{{title}}", "", ""] });
+      await fontsReady();
+      startDeck([cover, outline, content], { footer: ["{{author}}", "{{title}}", "{{date}}"] });
     </script>
   </body>
 </html>

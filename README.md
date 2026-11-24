@@ -59,7 +59,12 @@ python3 tools/serve.py                            # → http://localhost:8000/
 ```
 
 Open the printed address: the home page lists every presentation. Click **New presentation**
-to start one from the template, or open the example course in `presentations/2026/`.
+to start one from a template, or open the example course in `presentations/2026/`.
+
+Eleven templates are available, each previewed live in the dialog: Paper (default), Madrid
+(the Beamer theme from Overleaf), Metropolis, Swiss, Midnight, Aurora, Editorial, Neo-brutalist,
+Blueprint, Chalkboard and Nord. A template is a stylesheet in `deck/themes/` that restyles the
+same building blocks (`title`, `cover`, `bullets`, `box` of `deck/components.js`, and the footer).
 
 > An internet connection is needed while presenting from the server: GSAP, KaTeX and the
 > EB Garamond font come from a CDN. The HTML export embeds them and works offline.
@@ -71,7 +76,7 @@ to start one from the template, or open the example course in `presentations/202
 <img src="docs/images/home.png" alt="Home page with three presentations, tags and the Upcoming view" width="100%">
 
 Every presentation of `presentations/` with a live thumbnail. Search (`/`), sort, grid or list
-view, **stars**, **tags**, **archive**, **duplicate**, and **Edit details…** for the title,
+view, **stars**, **tags**, **archive**, **duplicate**, **delete** (after confirmation) and **Edit details…** for the title,
 description, date and venue of the talk. The **Upcoming** view lists dated talks, closest first.
 Library details are saved in `<presentation>/meta.json`, next to the slides.
 
@@ -205,7 +210,7 @@ SlideDeck is designed to be authored with a coding agent (Claude Code, Codex…)
 | Command | What it does |
 | --- | --- |
 | `python3 tools/serve.py [presentation]` | Local server with live reload, home page, notes, feedback and GIF export. |
-| `python3 tools/new.py presentations/2026/my_talk --title "My talk"` | New presentation from the template (also available from the home page). |
+| `python3 tools/new.py presentations/2026/my_talk --title "My talk" [--theme madrid] [--author "…"]` | New presentation from a template (also available from the home page). |
 | `.venv/bin/python tools/capture.py <presentation> [--slide N] [--frames 2]` | One image per step → `.inspection/storyboard.jpg` and `report.json`. |
 | `.venv/bin/python tools/review.py <presentation> [--clear]` | Edit-mode feedback → `.inspection/review/review.md` and annotated captures. |
 | `.venv/bin/python tools/gif.py <presentation> [--slide 3 5] [--combined]` | Animated GIFs (`--fps`, `--width`, `--hold`, `--once`). |
@@ -214,7 +219,7 @@ SlideDeck is designed to be authored with a coding agent (Claude Code, Codex…)
 
 ```text
 deck/            the shared engine
-                 deck.js (navigation), components.js, theme.css
+                 deck.js (navigation), components.js, theme.css, themes/*.css (templates)
                  options.*, pen.js, laser.js, presenter.js + notes.js, overview.js,
                  export.js (HTML), print.js (PDF), review.* (edit mode), home.*, i18n.js
 tools/           serve.py · library.py · capture.py · review.py · gif.py · new.py

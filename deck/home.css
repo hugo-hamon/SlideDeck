@@ -302,6 +302,14 @@ kbd {
 
 .hm-toast.warn { background: #b3261e; }
 
+.hm-menu .hm-menu-danger { color: #b3261e; }
+.hm-menu .hm-menu-danger:hover { background: #fdecea; }
+.hm-primary.hm-danger { background: #b3261e; }
+.hm-delete-name { display: flex; flex-direction: column; gap: 2px; margin: 0; }
+.hm-delete-name strong { font-size: 16px; }
+.hm-delete-name code { color: var(--muted); }
+.hm-warning { margin: 0; padding: 10px 12px; border-radius: 10px; background: #fdecea; color: #8c1d18; }
+
 @media (max-width: 760px) {
   body { grid-template-columns: 1fr; }
   .hm-side { position: static; height: auto; }
@@ -325,3 +333,26 @@ kbd {
 .hm-soon.today { background: #e6f6ef; color: #1e7a5c; }
 .hm-soon.past { background: #f0f2f7; color: var(--muted); font-weight: 400; }
 .hm-cards.list .hm-desc, .hm-cards.list .hm-when { flex: 1 1 100%; }
+
+/* ---------- template picker (new presentation) ---------- */
+
+.hm-dialog-wide { width: min(1060px, 94vw); max-height: 92vh; overflow-y: auto; }
+.hm-field { display: flex; flex-direction: column; gap: 8px; font-weight: 600; }
+.hm-themes { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+.hm-theme {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+  border: 2px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+.hm-theme:hover { border-color: #c3cbdb; }
+.hm-theme.on { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.hm-theme .hm-thumb { border-bottom: 1px solid var(--line); }
+.hm-theme strong { padding: 8px 10px 0; font-size: 14px; }
+.hm-theme small { padding: 2px 10px 10px; color: var(--muted); font-size: 12px; font-weight: 400; line-height: 1.35; }

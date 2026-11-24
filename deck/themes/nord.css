@@ -1,0 +1,81 @@
+/* Nord: calm arctic palette, floating title bar, progress line and soft white cards. */
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap");
+
+:root {
+  --paper: #eceff4;
+  --panel: #ffffff;
+  --ink: #2e3440;
+  --ink-soft: #5b657a;
+  --line: #d8dee9;
+  --blue: #5e81ac;
+  --blue-fill: rgba(94, 129, 172, 0.16);
+  --blue-soft: #e5ebf3;
+  --green: #5f9a5c;
+  --green-fill: rgba(95, 154, 92, 0.16);
+  --red: #bf616a;
+  --red-fill: rgba(191, 97, 106, 0.14);
+  --serif: Manrope, system-ui, sans-serif;
+}
+
+.title {
+  top: 40px;
+  left: 80px;
+  right: 80px;
+  height: 112px;
+  display: flex;
+  align-items: center;
+  gap: 26px;
+  padding: 0 44px;
+  border-radius: 26px;
+  background: var(--panel);
+  box-shadow: 0 10px 30px rgba(46, 52, 64, 0.08);
+  text-align: left;
+  font-size: 54px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.title::before { content: ""; flex: none; width: 12px; height: 52px; border-radius: 6px; background: linear-gradient(var(--blue), #88c0d0); }
+
+/* Progress line under the title bar. */
+.stage:not(:has(.cover))::before {
+  content: "";
+  position: absolute;
+  top: 168px;
+  left: 80px;
+  width: calc((100% - 160px) * var(--progress, 0));
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--blue), #88c0d0);
+}
+
+/* Title page: frost circles on the right. */
+.stage:has(.cover)::before {
+  content: "";
+  position: absolute;
+  top: 140px;
+  right: -260px;
+  width: 900px;
+  height: 900px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #88c0d0, var(--blue));
+  opacity: 0.9;
+}
+
+.cover { inset: 0 760px 120px 160px; align-items: flex-start; text-align: left; gap: 14px; }
+.cover-title { align-items: flex-start; gap: 22px; margin-bottom: 30px; }
+.cover-heading { font-size: 96px; font-weight: 800; letter-spacing: -0.03em; }
+.cover-subtitle { font-size: 40px; font-style: normal; font-weight: 500; }
+.cover-title::after { order: -1; width: 120px; height: 12px; margin: 0 0 16px; border-radius: 6px; background: linear-gradient(90deg, var(--blue), #88c0d0); }
+.cover-author { font-size: 36px; font-weight: 700; }
+.cover-institute, .cover-date { font-size: 30px; }
+
+.bullets { font-weight: 500; }
+.bullets li { padding-left: 60px; }
+.bullets li::before { width: 22px; height: 22px; border-radius: 7px; background: var(--blue-fill); box-shadow: inset 0 0 0 4px var(--blue); }
+
+.box { border: 0; border-radius: 26px; background: var(--panel); box-shadow: 0 14px 40px rgba(46, 52, 64, 0.1); }
+.box-title { display: inline-block; margin: 26px 30px 0; padding: 6px 20px; border-radius: 99px; background: var(--c-fill); font-size: 28px; font-weight: 700; }
+.box-body { padding: 14px 30px 28px; }
+
+.footer { left: 80px; right: 80px; bottom: 26px; color: var(--ink-soft); font-weight: 500; }
+.footer .page { padding: 2px 16px; border: 0; border-radius: 99px; background: var(--panel); color: var(--ink); text-align: center; }

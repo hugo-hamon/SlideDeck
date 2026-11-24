@@ -11,6 +11,9 @@ const VIEWS = [
   ["archived", '<rect x="4" y="5" width="16" height="4" rx="1"/><path d="M5 9v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9M10 13h4"/>'],
 ];
 const LAYOUT_KEY = "deck-home-layout";
+const AUTHOR_KEY = "deck-home-author";
+/** Templates of a new presentation: one stylesheet each in deck/themes/ (labels: `theme.<id>`). */
+const THEMES = ["paper", "madrid", "metropolis", "swiss", "midnight", "aurora", "editorial", "brutalist", "blueprint", "chalkboard", "nord"];
 const icon = (paths, size = 18) => `<svg viewBox="0 0 24 24" width="${size}" height="${size}">${paths}</svg>`;
 const STAR = '<path d="m12 4 2.4 5 5.4.6-4 3.7 1.1 5.3L12 16l-4.9 2.6 1.1-5.3-4-3.7 5.4-.6Z"/>';
 
@@ -31,6 +34,30 @@ addStrings({
     "home.folderPlaceholder": "pooling_on_graphs",
     "home.cancel": "Cancel",
     "home.create": "Create and open",
+    "home.author": "Author",
+    "home.template": "Template",
+    "theme.paper": "Paper",
+    "theme.paper.desc": "Light paper figure in EB Garamond, the default look.",
+    "theme.madrid": "Madrid (Beamer)",
+    "theme.madrid.desc": "The Beamer theme from Overleaf, with its blue bands and rounded blocks.",
+    "theme.metropolis": "Metropolis",
+    "theme.metropolis.desc": "Modern Beamer style, dark title bar and orange progress line.",
+    "theme.swiss": "Swiss",
+    "theme.swiss.desc": "Bold grotesque type, strict grid and a single red accent.",
+    "theme.midnight": "Midnight",
+    "theme.midnight.desc": "Dark mode with colour glows and glass cards.",
+    "theme.aurora": "Aurora",
+    "theme.aurora.desc": "Pastel gradients and frosted-glass cards.",
+    "theme.editorial": "Editorial",
+    "theme.editorial.desc": "Magazine layout, masthead rules and serif headlines.",
+    "theme.brutalist": "Neo-brutalist",
+    "theme.brutalist.desc": "Thick outlines, hard shadows and bright flat colours.",
+    "theme.blueprint": "Blueprint",
+    "theme.blueprint.desc": "Grid paper, drawing frame and a title block as footer.",
+    "theme.chalkboard": "Chalkboard",
+    "theme.chalkboard.desc": "Slate board in a wooden frame, chalk handwriting.",
+    "theme.nord": "Nord",
+    "theme.nord.desc": "Calm arctic palette, floating title bar and progress line.",
     "home.details": "Details",
     "home.description": "Description",
     "home.descriptionPlaceholder": "Audience, goal, length…",
@@ -65,6 +92,11 @@ addStrings({
     "home.unarchive": "Unarchive",
     "home.archivedToast": "Presentation archived",
     "home.unarchivedToast": "Presentation unarchived",
+    "home.delete": "Delete…",
+    "home.deleteTitle": "Delete this presentation?",
+    "home.deleteWarning": "Its whole folder (slides, images, notes, feedback) will be removed from the disk. This cannot be undone.",
+    "home.deleteConfirm": "Delete permanently",
+    "home.deleted": "Presentation deleted: {path}",
     "home.duplicated": "Copy created: {path}",
     "home.copied": "Command copied",
     "home.saved": "Details saved",
@@ -94,6 +126,30 @@ addStrings({
     "home.folderPlaceholder": "pooling_sur_graphes",
     "home.cancel": "Annuler",
     "home.create": "Créer et ouvrir",
+    "home.author": "Auteur",
+    "home.template": "Modèle",
+    "theme.paper": "Papier",
+    "theme.paper.desc": "Figure d'article claire en EB Garamond, le style par défaut.",
+    "theme.madrid": "Madrid (Beamer)",
+    "theme.madrid.desc": "Le thème Beamer d'Overleaf, avec ses bandeaux bleus et ses blocs arrondis.",
+    "theme.metropolis": "Metropolis",
+    "theme.metropolis.desc": "Beamer moderne, barre de titre sombre et ligne de progression orange.",
+    "theme.swiss": "Suisse",
+    "theme.swiss.desc": "Grotesque grasse, grille stricte et un seul accent rouge.",
+    "theme.midnight": "Minuit",
+    "theme.midnight.desc": "Mode sombre avec halos colorés et cartes en verre.",
+    "theme.aurora": "Aurore",
+    "theme.aurora.desc": "Dégradés pastel et cartes en verre dépoli.",
+    "theme.editorial": "Éditorial",
+    "theme.editorial.desc": "Mise en page magazine, filets et titres à empattements.",
+    "theme.brutalist": "Néo-brutaliste",
+    "theme.brutalist.desc": "Contours épais, ombres franches et couleurs vives.",
+    "theme.blueprint": "Plan technique",
+    "theme.blueprint.desc": "Papier quadrillé, cadre de dessin et cartouche en pied de page.",
+    "theme.chalkboard": "Tableau noir",
+    "theme.chalkboard.desc": "Ardoise verte dans un cadre en bois, écriture à la craie.",
+    "theme.nord": "Nord",
+    "theme.nord.desc": "Palette arctique, barre de titre flottante et ligne de progression.",
     "home.details": "Informations",
     "home.description": "Description",
     "home.descriptionPlaceholder": "Public, objectif, durée…",
@@ -128,6 +184,11 @@ addStrings({
     "home.unarchive": "Désarchiver",
     "home.archivedToast": "Présentation archivée",
     "home.unarchivedToast": "Présentation désarchivée",
+    "home.delete": "Supprimer…",
+    "home.deleteTitle": "Supprimer cette présentation ?",
+    "home.deleteWarning": "Tout son dossier (slides, images, notes, retours) sera effacé du disque. Cette action est irréversible.",
+    "home.deleteConfirm": "Supprimer définitivement",
+    "home.deleted": "Présentation supprimée : {path}",
     "home.duplicated": "Copie créée : {path}",
     "home.copied": "Commande copiée",
     "home.saved": "Informations enregistrées",
@@ -342,7 +403,8 @@ function openMenu(button, item) {
     <button data-menu="duplicate">${icon('<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/>')}${t("home.duplicate")}</button>
     <button data-menu="command">${icon('<path d="m5 8 4 4-4 4M12 16h7"/>')}${t("home.copyCommand")}</button>
     <hr />
-    <button data-menu="archive">${icon(VIEWS[2][2])}${item.archived ? t("home.unarchive") : t("home.archive")}</button>`;
+    <button data-menu="archive">${icon(VIEWS[3][1])}${item.archived ? t("home.unarchive") : t("home.archive")}</button>
+    <button data-menu="delete" class="hm-menu-danger">${icon('<path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-12M9 7V4h6v3"/>')}${t("home.delete")}</button>`;
   const box = button.getBoundingClientRect();
   menu.hidden = false;
   const width = menu.offsetWidth;
@@ -360,6 +422,7 @@ async function menuAction(action) {
   if (!item) return;
   if (action === "open") location.assign(`/${item.path}/`);
   else if (action === "edit") openEdit(item);
+  else if (action === "delete") openDelete(item);
   else if (action === "tab") open(`/${item.path}/`, "_blank");
   else if (action === "archive") {
     await update(item.path, { archived: !item.archived });
@@ -413,12 +476,77 @@ editForm.addEventListener("submit", async (event) => {
     editForm.querySelector(".hm-error").textContent = error.message;
   }
 });
+
+const deleteForm = $(".hm-delete .hm-dialog");
+
+function openDelete(item) {
+  deleteForm.dataset.path = item.path;
+  deleteForm.querySelector(".hm-delete-name").innerHTML = `<strong>${escape(item.title)}</strong><code>${escape(item.path)}</code>`;
+  deleteForm.querySelector(".hm-error").textContent = "";
+  $(".hm-delete").hidden = false;
+  // Focus on "Cancel": pressing Enter by reflex must not delete anything.
+  deleteForm.querySelector("[data-action='cancel']").focus();
+}
+
+deleteForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  try {
+    const { path } = await post("delete", { path: deleteForm.dataset.path });
+    cards.get(path)?.remove();
+    cards.delete(path);
+    state.items = state.items.filter((item) => item.path !== path);
+    closeModals();
+    render();
+    toast(t("home.deleted", { path }));
+  } catch (error) {
+    deleteForm.querySelector(".hm-error").textContent = error.message;
+  }
+});
+
 let nameEdited = false;
+
+/** Template cards, built once: each preview is the template itself (iframe on /__template/). */
+function renderThemes() {
+  const box = form.querySelector(".hm-themes");
+  if (!box.children.length) {
+    box.innerHTML = THEMES.map(
+      (id) => `<button type="button" class="hm-theme" data-theme="${id}" role="radio">
+        <span class="hm-thumb"><iframe src="/__template/${id}/index.html?thumb#/3/99" loading="lazy" tabindex="-1" title="${t(`theme.${id}`)}"></iframe></span>
+        <strong>${t(`theme.${id}`)}</strong><small>${t(`theme.${id}.desc`)}</small>
+      </button>`,
+    ).join("");
+    box.querySelectorAll(".hm-thumb").forEach((thumb) => thumbs.observe(thumb));
+  }
+  pickTheme(form.theme.value);
+}
+
+function pickTheme(id) {
+  form.theme.value = id;
+  form.querySelectorAll(".hm-theme").forEach((card) => {
+    card.classList.toggle("on", card.dataset.theme === id);
+    card.setAttribute("aria-checked", card.dataset.theme === id);
+  });
+}
+
+// Hovering a template shows its title page, leaving it goes back to the content slide.
+form.addEventListener("mouseover", (event) => previewSlide(event, 1));
+form.addEventListener("mouseout", (event) => previewSlide(event, 3));
+function previewSlide(event, slide) {
+  const card = event.target.closest(".hm-theme");
+  if (!card || card.contains(event.relatedTarget)) return;
+  try {
+    card.querySelector("iframe").contentWindow.location.hash = `#/${slide}/99`;
+  } catch {}
+}
 
 function openModal() {
   form.reset();
   nameEdited = false;
   form.year.value = new Date().getFullYear();
+  try {
+    form.author.value = localStorage.getItem(AUTHOR_KEY) ?? "";
+  } catch {}
+  renderThemes();
   form.querySelector(".hm-error").textContent = "";
   previewPath();
   $(".hm-create").hidden = false;
@@ -441,7 +569,10 @@ form.addEventListener("input", (event) => {
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
   try {
-    const { path } = await post("new", { title: form.title.value, name: form.name.value, year: form.year.value });
+    const { path } = await post("new", { title: form.title.value, name: form.name.value, year: form.year.value, author: form.author.value, theme: form.theme.value });
+    try {
+      localStorage.setItem(AUTHOR_KEY, form.author.value.trim());
+    } catch {}
     location.assign(`/${path}/`);
   } catch (error) {
     form.querySelector(".hm-error").textContent = error.message;
@@ -472,6 +603,7 @@ document.addEventListener("click", async (event) => {
   else if (action === "menu") state.menu === item.path ? closeMenu() : openMenu(target, item);
   else if (action === "tag") editTag(card);
   else if (action === "new") openModal();
+  else if (target.dataset.theme) pickTheme(target.dataset.theme);
   else if (action === "cancel") closeModals();
 });
 

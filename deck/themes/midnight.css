@@ -1,0 +1,80 @@
+/* Midnight: dark mode, soft colour glows, glass cards and a geometric grotesque. */
+@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap");
+
+:root {
+  --paper: #0b1020;
+  --panel: #131a33;
+  --ink: #e7ecf7;
+  --ink-soft: #9aa6c1;
+  --line: rgba(255, 255, 255, 0.16);
+  --blue: #7aa7ff;
+  --blue-fill: rgba(122, 167, 255, 0.18);
+  --blue-soft: rgba(122, 167, 255, 0.12);
+  --green: #3dd6a3;
+  --green-fill: rgba(61, 214, 163, 0.16);
+  --red: #ff6b8b;
+  --red-fill: rgba(255, 107, 139, 0.16);
+  --serif: Inter, system-ui, sans-serif;
+  --display: "Space Grotesk", Inter, sans-serif;
+}
+
+.stage {
+  background:
+    radial-gradient(900px 620px at 92% -8%, rgba(122, 110, 255, 0.36), transparent 62%),
+    radial-gradient(820px 600px at -6% 108%, rgba(61, 214, 163, 0.2), transparent 60%),
+    var(--paper);
+}
+
+.title {
+  top: 84px;
+  left: 140px;
+  right: 140px;
+  text-align: left;
+  font-size: 66px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  background: linear-gradient(90deg, #ffffff 0%, #b9cbff 60%, #8fe9cb 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.cover { inset: 0 160px 120px; align-items: flex-start; text-align: left; gap: 12px; }
+.cover-title { align-items: flex-start; gap: 22px; margin-bottom: 40px; }
+.cover-title::before {
+  content: "●  Présentation";
+  padding: 10px 24px;
+  border: 1px solid var(--line);
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--green);
+  font-size: 26px;
+}
+.cover-title::after { display: none; }
+.cover-heading {
+  font-size: 104px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  background: linear-gradient(90deg, #ffffff 0%, #b9cbff 55%, #8fe9cb 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.cover-subtitle { font-size: 42px; font-style: normal; }
+.cover-author { font-size: 36px; font-weight: 600; }
+.cover-institute, .cover-date { font-size: 28px; }
+
+.bullets li::before { width: 14px; height: 14px; background: var(--green); box-shadow: 0 0 18px 4px rgba(61, 214, 163, 0.55); }
+
+.box {
+  border: 1px solid var(--line);
+  border-radius: 26px;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 30px 60px rgba(0, 0, 0, 0.35);
+}
+.box::before { content: ""; position: absolute; top: 0; left: 28px; right: 28px; height: 3px; border-radius: 0 0 3px 3px; background: var(--c); box-shadow: 0 0 22px var(--c); }
+.box-title { padding: 26px 32px 0; font-size: 34px; }
+.box-body { padding: 12px 32px 28px; }
+
+.footer { color: var(--ink-soft); }
+.footer .page { padding: 2px 16px; border: 1px solid var(--line); border-radius: 99px; color: var(--ink); text-align: center; }

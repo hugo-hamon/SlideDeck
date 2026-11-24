@@ -56,13 +56,19 @@
     <div class="hm-menu" hidden></div>
 
     <div class="hm-modal hm-create" hidden>
-      <form class="hm-dialog">
+      <form class="hm-dialog hm-dialog-wide">
         <h2 data-i18n="home.new">New presentation</h2>
         <label><span data-i18n="home.fieldTitle">Title</span><input name="title" required placeholder="Pooling on graphs" data-i18n-placeholder="home.titlePlaceholder" autocomplete="off" /></label>
         <div class="hm-fields">
           <label><span data-i18n="home.folder">Folder</span><input name="name" required pattern="[a-z0-9][a-z0-9_]*" placeholder="pooling_on_graphs" data-i18n-placeholder="home.folderPlaceholder" autocomplete="off" /></label>
           <label><span data-i18n="home.sortYear">Year</span><input name="year" required pattern="\d{4}" autocomplete="off" /></label>
         </div>
+        <label><span data-i18n="home.author">Author</span><input name="author" placeholder="Ada Lovelace" autocomplete="name" /></label>
+        <div class="hm-field">
+          <span data-i18n="home.template">Template</span>
+          <div class="hm-themes" role="radiogroup"></div>
+        </div>
+        <input type="hidden" name="theme" value="paper" />
         <p class="hm-path"></p>
         <p class="hm-error"></p>
         <div class="hm-actions">
@@ -85,6 +91,19 @@
         <div class="hm-actions">
           <button type="button" data-action="cancel" data-i18n="home.cancel">Cancel</button>
           <button type="submit" class="hm-primary" data-i18n="home.save">Save</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="hm-modal hm-delete" hidden>
+      <form class="hm-dialog">
+        <h2 data-i18n="home.deleteTitle">Delete this presentation?</h2>
+        <p class="hm-delete-name"></p>
+        <p class="hm-warning" data-i18n="home.deleteWarning">Its whole folder (slides, images, notes, feedback) will be removed from the disk. This cannot be undone.</p>
+        <p class="hm-error"></p>
+        <div class="hm-actions">
+          <button type="button" data-action="cancel" data-i18n="home.cancel">Cancel</button>
+          <button type="submit" class="hm-primary hm-danger" data-i18n="home.deleteConfirm">Delete permanently</button>
         </div>
       </form>
     </div>

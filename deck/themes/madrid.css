@@ -1,0 +1,101 @@
+/*
+ * Madrid: the Beamer theme (whale + orchid colours, rounded inner theme with shadows,
+ * infolines footline). Structure blue rgb(0.2, 0.2, 0.7), Computer Modern Sans (CMU).
+ */
+@import url("https://cdn.jsdelivr.net/npm/computer-modern@0.1.2/cmu-sans-serif.css");
+
+:root {
+  --paper: #ffffff;
+  --panel: #ffffff;
+  --ink: #000000;
+  --ink-soft: #4d4d4d;
+  --line: #c9c9e3;
+  --blue: #3333b3;
+  --blue-fill: rgba(51, 51, 179, 0.14);
+  --blue-soft: #e9e9f3;
+  --green: #008000;
+  --green-fill: rgba(0, 128, 0, 0.14);
+  --red: #e60000;
+  --red-fill: rgba(230, 0, 0, 0.12);
+  --serif: "CMU Sans Serif", KaTeX_SansSerif, "Helvetica Neue", Arial, sans-serif;
+  /* palette primary, secondary (75 % black) and tertiary (50 % black) */
+  --madrid-1: #3333b3;
+  --madrid-2: #262686;
+  --madrid-3: #1a1a5a;
+}
+
+/* Frame title: full-width band, white on the structure colour. */
+.title {
+  top: 0;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  padding: 0 56px;
+  background: var(--madrid-1);
+  color: #fff;
+  text-align: left;
+  font-size: 58px;
+  font-weight: 400;
+}
+
+/* Title page: rounded title box with a shadow, then author, institute and date. */
+.cover { gap: 22px; }
+.cover-title {
+  align-self: stretch;
+  gap: 12px;
+  margin-bottom: 30px;
+  padding: 40px 48px;
+  border-radius: 16px;
+  background: var(--madrid-1);
+  color: #fff;
+  box-shadow: 8px 8px 14px rgba(0, 0, 0, 0.3);
+}
+.cover-title::after { display: none; }
+.cover-heading { font-size: 72px; font-weight: 400; }
+.cover-subtitle { color: #fff; font-size: 44px; font-style: normal; }
+.cover-author { font-size: 42px; }
+.cover-institute, .cover-date { color: var(--ink); font-size: 36px; }
+
+/* Ball items. */
+.bullets li { padding-left: 60px; }
+.bullets li::before {
+  left: 6px;
+  width: 26px;
+  height: 26px;
+  background: radial-gradient(circle at 34% 30%, #fff 0, #a0a0e2 20%, var(--madrid-1) 56%, var(--madrid-3) 100%);
+}
+
+/* Rounded blocks with a shadow: dark title bar, body tinted at 10 %. */
+.box {
+  border: 0;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--bar) 10%, white);
+  box-shadow: 6px 6px 12px rgba(0, 0, 0, 0.25);
+}
+.box-blue { --bar: var(--madrid-2); }
+.box-green { --bar: #006000; }
+.box-red { --bar: #bf0000; }
+.box-title { padding: 12px 26px; background: var(--bar); color: #fff; font-size: 38px; font-weight: 400; }
+.box-body { padding: 18px 26px 22px; }
+
+/* Infolines footline: author | title | date and "n / N", in three shades of blue. */
+.footer {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 44px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  color: #fff;
+  font-size: 24px;
+}
+.footer .info { display: contents; }
+.footer .info > span { display: flex; align-items: center; justify-content: center; }
+.footer .info > .sep { display: none; }
+.footer .info > span:nth-child(1) { background: var(--madrid-3); }
+.footer .info > span:nth-child(3) { background: var(--madrid-2); }
+.footer .info > span:nth-child(5) { background: var(--madrid-1); padding-right: 110px; }
+.footer .where { position: absolute; top: 0; right: 28px; bottom: 0; }
+.footer .context { display: none; }
+.footer .page { min-width: 0; padding: 0; border: 0; color: #fff; font-size: 0; }
+.footer .page::before { content: attr(data-n) "\2009/\2009" var(--total, ""); font-size: 24px; }
