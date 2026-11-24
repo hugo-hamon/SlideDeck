@@ -5,3 +5,5 @@ __pycache__/
 .inspection/
 node_modules/
 .DS_Store
+feedback.json
+export/

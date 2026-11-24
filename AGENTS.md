@@ -16,7 +16,7 @@ code et rapidité d'itération. Ces règles s'appliquent à Claude Code, Codex e
 ```text
 SlideDeck/
 ├── deck/                 # moteur partagé : deck.js, components.js, theme.css, review.js (mode Édition)
-├── tools/                # serve.py (aperçu), capture.py (storyboard), review.py (retours), new.py
+├── tools/                # serve.py (aperçu), capture.py (storyboard), review.py (retours), gif.py (export GIF), new.py
 ├── templates/presentation/
 └── presentations/<année>/<nom_en_snake_case>/
     ├── index.html        # ordre des slides, pied de page

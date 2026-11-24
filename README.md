@@ -45,6 +45,19 @@ An internet connection is required: GSAP, KaTeX and the font load from a CDN.
 4. Give feedback directly on the slides: press **`e`** in the browser to enter edit mode
    (see below), annotate, then tell the agent *"read my feedback"*.
 
+## Export as GIF
+
+```bash
+.venv/bin/python tools/gif.py presentations/2026/my_talk              # one GIF per slide
+.venv/bin/python tools/gif.py presentations/2026/my_talk --slide 3 5  # chosen slides
+.venv/bin/python tools/gif.py presentations/2026/my_talk --combined   # all in one GIF
+```
+
+→ `<presentation>/export/slide-NN.gif` (git-ignored). Each step is played then held for
+`--hold` seconds (default 1.5), as if the speaker paused. Options: `--fps` (25), `--width`
+(960 px), `--once` (no loop), `-o` (output folder). Rendering is frame-exact (the timeline is
+frozen at each instant), so it does not depend on the machine's speed.
+
 ## Edit mode (feedback)
 
 Press `e` during the preview to open the edit panel; the slide shrinks to make room.
@@ -77,7 +90,7 @@ The agent reads it with:
 ```text
 deck/            engine (deck.js), components (components.js), theme (theme.css),
                  edit mode (review.js, review.css)
-tools/           serve.py · capture.py · review.py · new.py
+tools/           serve.py · capture.py · review.py · gif.py · new.py
 templates/       starting point for new presentations
 presentations/   one folder per talk: index.html + pages/*.js
 ```

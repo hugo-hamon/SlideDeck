@@ -129,7 +129,14 @@ export function startDeck(slides, { footer } = {}) {
     },
     /** Retours du mode Édition (touche `e`) : voir tools/review.py. */
     review: review.api,
-    info: () => ({ slide: state.index + 1, step: state.step + 1, steps: state.current.stops.length, slides: slides.length }),
+    /** `stops` : fin de chaque étape, en secondes de timeline (export GIF). */
+    info: () => ({
+      slide: state.index + 1,
+      step: state.step + 1,
+      steps: state.current.stops.length,
+      stops: [...state.current.stops],
+      slides: slides.length,
+    }),
   };
 }
 
