@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Programmation C</title>
+    <link rel="icon" href="/deck/favicon.ico" sizes="any" />
+    <link rel="icon" href="/deck/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" />
+    <link rel="stylesheet" href="/deck/theme.css" />
+    <link rel="stylesheet" href="/deck/themes/madrid.css" />
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+    <script type="importmap">
+      {
+        "imports": {
+          "gsap": "https://cdn.jsdelivr.net/npm/gsap@3.12.5/+esm",
+          "katex": "https://cdn.jsdelivr.net/npm/katex@0.16.11/+esm",
+          "deck/": "/deck/"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <main class="stage"></main>
+    <script type="module">
+      import { fontsReady, startDeck } from "deck/deck.js";
+      import cover from "./pages/cover.js";
+      import plan, { upcoming } from "./pages/plan.js";
+      import whyPointers from "./pages/why.js";
+      import definition from "./pages/definition.js";
+      import pointerInMemory from "./pages/inMemory.js";
+      import operators from "./pages/operators.js";
+      import { copyAddress, copyValue } from "./pages/copy.js";
+      import arithmetic from "./pages/arithmetic.js";
+      import arithmeticExamples from "./pages/arithmeticExamples.js";
+      import arrays from "./pages/arrays.js";
+      import { exerciseArithmetic, exerciseRows, exerciseStrings, exerciseStructs, exerciseTrace } from "./pages/exercises.js";
+      import { initialisation, validAddress } from "./pages/initialisation.js";
+      import { mallocBug, mallocFix, mallocTrace } from "./pages/malloc.js";
+      import { blockAlloc, callocRealloc, runtimeSize } from "./pages/blocks.js";
+      import matrix2d from "./pages/matrix.js";
+      import { rowsAlloc, rowsExample } from "./pages/rows.js";
+      import structs from "./pages/structs.js";
+
+      await fontsReady();
+      await document.fonts.load("700 26px 'JetBrains Mono'");
+      startDeck([
+        cover, plan,
+        whyPointers, definition, pointerInMemory, operators, copyValue, copyAddress,
+        arithmetic, arithmeticExamples, arrays, exerciseTrace, exerciseArithmetic,
+        initialisation, validAddress, mallocBug, mallocFix, mallocTrace,
+        blockAlloc, callocRealloc, runtimeSize,
+        matrix2d, rowsAlloc, rowsExample, structs,
+        exerciseStructs, exerciseRows, exerciseStrings,
+        upcoming,
+      ], {
+        footer: ["Sébastien Adam (Laboratoire LITIS)", "Programmation C", "Cours 4"],
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,142 @@
+/* Course-specific pieces: C listings, memory tables, terminal, memory cells (helpers.js). */
+:root {
+  --mono: "JetBrains Mono", "DejaVu Sans Mono", monospace;
+}
+.code, .term, .mono, .inline, .grid, code { font-variant-ligatures: none; }
+
+/* ---------- C listing ---------- */
+.code {
+  position: absolute;
+  box-sizing: border-box;
+  border: 2px solid var(--line);
+  border-radius: 12px;
+  background: var(--blue-soft);
+  font-family: var(--mono);
+  white-space: pre;
+}
+.code-line { position: relative; padding: 0 22px; }
+.code-bar {
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  top: 0;
+  border-radius: 8px;
+  border-left: 6px solid var(--red);
+  background: var(--red-fill);
+}
+.tok-k { color: var(--madrid-2, var(--blue)); font-weight: 700; }
+.tok-s { color: var(--green); }
+.tok-c, .tok-p { color: var(--ink-soft); font-style: italic; }
+.tok-p { font-style: normal; }
+.hole { color: var(--red); font-weight: 700; }
+.mono { font-family: var(--mono); }
+code, .inline {
+  font-family: var(--mono);
+  font-size: 0.86em;
+}
+
+/* ---------- tables (objects, addresses, values) ---------- */
+.grid {
+  position: absolute;
+  display: grid;
+  border: 2px solid var(--ink);
+  background: var(--panel);
+}
+.grid > .cell {
+  position: relative;
+  box-sizing: border-box;
+  border-right: 1px solid var(--ink-soft);
+  border-bottom: 1px solid var(--ink-soft);
+  font-family: var(--mono);
+}
+.grid > .cell.head {
+  background: var(--blue-soft);
+  font-family: var(--serif);
+  font-weight: 600;
+}
+.cell > .v {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
+.cell > .flash {
+  position: absolute;
+  inset: 0;
+  background: var(--red-fill);
+  opacity: 0;
+}
+.grid-caption {
+  position: absolute;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* ---------- terminal ---------- */
+.term {
+  position: absolute;
+  box-sizing: border-box;
+  border-radius: 12px;
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--mono);
+  overflow: hidden;
+}
+.term-head {
+  padding: 8px 18px;
+  border-bottom: 1px solid var(--ink-soft);
+  color: var(--line);
+  font-size: 0.8em;
+}
+.term-line { padding: 0 18px; white-space: pre; }
+.term-line .prompt { color: var(--line); }
+
+/* ---------- misc ---------- */
+.note {
+  position: absolute;
+  font-size: 30px;
+  line-height: 1.35;
+}
+.alert { color: var(--red); }
+.ok { color: var(--green); }
+.logo { position: absolute; }
+
+/* ---------- nested lists (points() in helpers.js) ---------- */
+.bullets li.sub {
+  margin-left: 60px;
+  margin-bottom: 12px;
+  padding-left: 40px;
+  font-size: 0.86em;
+}
+.bullets li.sub::before {
+  left: 4px;
+  top: 0.62em;
+  width: 0;
+  height: 0;
+  border-radius: 0;
+  border-top: 9px solid transparent;
+  border-bottom: 9px solid transparent;
+  border-left: 15px solid var(--madrid-1, var(--blue));
+  background: none;
+  transform: translateY(-50%);
+}
+
+/* ---------- outline ---------- */
+.ball {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: radial-gradient(circle at 34% 30%, var(--paper) 0, var(--blue) 56%, var(--madrid-3, var(--ink)) 100%);
+  color: var(--paper);
+  font-weight: 700;
+}
+.band {
+  position: absolute;
+  border-radius: 12px;
+  background: var(--blue-soft);
+  border-left: 8px solid var(--blue);
+}
