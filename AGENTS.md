@@ -19,6 +19,7 @@ SlideDeck/
 │                         # review.js (mode Édition),
 │                         # options.js (touche o : export HTML/GIF, raccourcis), pen.js (stylo), export.js, ui.js,
 │                         # home.* (page d'accueil de serve.py : liste, tags, archives),
+│                         # welcome.* (fenêtre d'accueil), tour.* + tour-deck.js (tutoriel guidé),
 │                         # presenter.js + notes.js (touche s), overview.js (g), laser.js (l), print.js (PDF), mount.js,
 │                         # i18n.js (langue de l'interface : anglais par défaut, français)
 ├── tools/                # serve.py (aperçu + accueil), library.py (accueil), capture.py (storyboard), review.py (retours), gif.py (export GIF), new.py

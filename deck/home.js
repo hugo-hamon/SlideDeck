@@ -2,7 +2,8 @@
  * Home page of tools/serve.py: every presentation, with search, tags, stars, archives
  * and talk details. Thumbnails are the presentations themselves (iframe `?thumb`).
  */
-import { LANGUAGES, addStrings, lang, setLang, t, translatePage } from "./i18n.js";
+import { addStrings, lang, t, translatePage } from "./i18n.js";
+import { setupWelcome } from "./welcome.js";
 
 const VIEWS = [
   ["all", '<rect x="4" y="5" width="16" height="11" rx="2"/><path d="M12 16v3M8 19h8"/>'],
@@ -605,6 +606,7 @@ document.addEventListener("click", async (event) => {
   else if (action === "new") openModal();
   else if (target.dataset.theme) pickTheme(target.dataset.theme);
   else if (action === "cancel") closeModals();
+  else if (action === "help") welcome.open();
 });
 
 $(".hm-search input").addEventListener("input", (event) => {
@@ -622,6 +624,8 @@ document.addEventListener("keydown", (event) => {
     closeMenu();
     closeModals();
     if (document.activeElement === $(".hm-search input")) document.activeElement.blur();
+  } else if (event.key === "?" && !event.target.closest("input, textarea") && document.querySelector(".hm-modal:not([hidden])") === null) {
+    welcome.open();
   } else if (event.key === "/" && !event.target.closest("input")) {
     event.preventDefault();
     $(".hm-search input").focus();
@@ -630,13 +634,19 @@ document.addEventListener("keydown", (event) => {
 
 addEventListener("focus", load);
 
-// Interface language (shared with the presentations' options window).
-$(".hm-lang").innerHTML = Object.entries(LANGUAGES)
-  .map(([code, label]) => `<button data-lang="${code}" class="${lang() === code ? "on" : ""}">${label}</button>`)
-  .join("");
-$(".hm-lang").addEventListener("click", (event) => {
-  const code = event.target.closest("[data-lang]")?.dataset.lang;
-  if (code && code !== lang()) setLang(code);
+// Welcome window and guided tour (first visit, "?" button or key).
+const welcome = setupWelcome({
+  reset() {
+    closeMenu();
+    closeModals();
+    Object.assign(state, { view: "all", tag: null, query: "" });
+    $(".hm-search input").value = "";
+    render();
+    scrollTo(0, 0);
+  },
+  firstCard: () => [...cards.values()].filter((card) => !card.hidden && card.isConnected).sort((a, b) => a.style.order - b.style.order)[0],
+  openMenu: (card) => openMenu(card.querySelector("[data-action='menu']"), state.items.find((item) => item.path === card.dataset.path)),
+  closeMenu,
 });
 
 // ---------- helpers ----------

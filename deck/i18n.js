@@ -140,6 +140,13 @@ const STRINGS = {
     "overview.help": "{n} slides · arrows then Enter · Esc to close",
     "print.preparing": "Preparing: slide {slide} ({n}/{total})",
     "print.ready": "{n} page(s): choose “Save as PDF”",
+    // guided tour
+    "tour.count": "{n} of {total}",
+    "tour.close": "Close the tour",
+    "tour.back": "Back",
+    "tour.next": "Next",
+    "tour.finish": "Finish",
+    "tour.try": "Try it:",
   },
   fr: {
     "action.next": "Étape suivante",
@@ -264,6 +271,12 @@ const STRINGS = {
     "overview.help": "{n} slides · flèches puis Entrée · Échap pour fermer",
     "print.preparing": "Préparation : slide {slide} ({n}/{total})",
     "print.ready": "{n} page(s) : choisissez « Enregistrer au format PDF »",
+    "tour.count": "{n} sur {total}",
+    "tour.close": "Fermer le tutoriel",
+    "tour.back": "Retour",
+    "tour.next": "Suivant",
+    "tour.finish": "Terminer",
+    "tour.try": "Essayez :",
   },
 };
 

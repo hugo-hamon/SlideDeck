@@ -1,0 +1,111 @@
+/* Guided tour (tour.js): tool interface, outside the slides' art direction. */
+.tour {
+  --tour-accent: #3d6fd1;
+  --tour-text: #1f2430;
+  --tour-muted: #6b7283;
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  color: var(--tour-text);
+  font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+  pointer-events: none;
+}
+
+.tour-hole {
+  position: fixed;
+  border-radius: 14px;
+  box-shadow: 0 0 0 3px var(--tour-accent), 0 0 0 200vmax rgba(15, 20, 32, 0.5);
+  transition: left 0.45s cubic-bezier(0.65, 0, 0.35, 1), top 0.45s cubic-bezier(0.65, 0, 0.35, 1),
+    width 0.45s cubic-bezier(0.65, 0, 0.35, 1), height 0.45s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.tour-hole.empty { box-shadow: 0 0 0 200vmax rgba(15, 20, 32, 0.5); }
+.tour-float .tour-hole { display: none; }
+
+.tour-card {
+  position: fixed;
+  width: min(360px, calc(100vw - 32px));
+  padding: 16px 18px 14px;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 24px 60px rgba(10, 15, 30, 0.32), 0 0 0 1px rgba(10, 15, 30, 0.06);
+  pointer-events: auto;
+  transition: left 0.45s cubic-bezier(0.65, 0, 0.35, 1), top 0.45s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.tour-float .tour-card { width: min(390px, calc(100vw - 48px)); }
+.tour-card.tour-in > * { animation: tour-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.tour-card.tour-in > :nth-child(2) { animation-delay: 0.03s; }
+.tour-card.tour-in > :nth-child(3) { animation-delay: 0.06s; }
+.tour-card.tour-in > :nth-child(n + 4) { animation-delay: 0.09s; }
+
+@keyframes tour-in {
+  from { opacity: 0; transform: translateY(6px); }
+}
+
+.tour-head { display: flex; align-items: center; justify-content: space-between; }
+.tour-count { color: var(--tour-accent); font-size: 12px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+.tour-card h3 { margin: 4px 0 6px; font-size: 17px; }
+.tour-body { color: #3d4454; }
+.tour-body p { margin: 0 0 6px; }
+.tour-body ul { margin: 4px 0 6px; padding-left: 18px; }
+.tour-body li { margin: 2px 0; }
+.tour-body code { font: 12px ui-monospace, monospace; }
+
+.tour kbd {
+  display: inline-block;
+  min-width: 22px;
+  padding: 0 6px;
+  border: 1px solid #d5d9e2;
+  border-bottom-width: 2px;
+  border-radius: 6px;
+  background: #fff;
+  color: var(--tour-text);
+  font: 600 12px/20px system-ui, sans-serif;
+  text-align: center;
+}
+
+.tour-try { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 10px; padding: 8px 10px; border-radius: 10px; background: #f3f6fc; }
+.tour-try span { margin-right: 2px; color: var(--tour-muted); font-size: 13px; }
+.tour-try kbd { transition: background 0.2s, border-color 0.2s, color 0.2s; }
+.tour-try kbd.done { border-color: #2f9e7f; background: #e6f6ef; color: #1e7a5c; }
+.tour-try kbd.done::after { content: " ✓"; }
+
+.tour-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 6px; margin-top: 14px; }
+/* Three buttons do not fit next to the dots: the dots take their own row. */
+.tour-foot:has([data-tour="action"]) .tour-dots { flex-basis: 100%; margin-bottom: 4px; }
+.tour-dots { display: flex; flex: 1; gap: 4px; }
+.tour-dots i { width: 6px; height: 6px; border-radius: 50%; background: #d9deea; transition: width 0.3s, background 0.3s; }
+.tour-dots i.seen { background: #a9bce6; }
+.tour-dots i.on { width: 16px; border-radius: 3px; background: var(--tour-accent); }
+
+.tour-foot button {
+  padding: 7px 12px;
+  border: 1px solid #d5d9e2;
+  border-radius: 9px;
+  background: #fff;
+  color: var(--tour-text);
+  font: inherit;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.tour-foot button:hover { background: #f3f5fa; }
+.tour-foot .tour-primary { border-color: var(--tour-accent); background: var(--tour-accent); color: #fff; font-weight: 600; }
+.tour-foot .tour-primary:hover { background: var(--tour-accent); filter: brightness(1.08); }
+
+.tour-x {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  border-radius: 7px;
+  background: none;
+  color: var(--tour-muted);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.tour-x:hover { background: #f0f2f7; color: var(--tour-text); }

@@ -7,7 +7,7 @@ import { createOverview } from "./overview.js";
 import { createPen } from "./pen.js";
 import { createPresenter } from "./presenter.js";
 import { createReview } from "./review.js";
-import { BACKDROPS, HOME_URL, actionFor, exported, hasHome, loadStyle, onSettings, thumbnail } from "./ui.js";
+import { BACKDROPS, HOME_URL, actionFor, exported, hasHome, loadStyle, onSettings, thumbnail, tourPending } from "./ui.js";
 
 const STAGE = { width: 1920, height: 1080 };
 const FADE = 0.35;
@@ -185,6 +185,7 @@ export function startDeck(allSlides, { footer } = {}) {
   fit();
   if (!fromHash()) show(0, 0, true);
   liveReload();
+  if (tourPending()) import("./tour-deck.js").then((tour) => tour.startDeckTour());
 
   window.deck = {
     goto: (slide, step = 1) => show(slide - 1, step - 1, false),

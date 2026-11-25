@@ -114,3 +114,16 @@ export const thumbnail = () => new URLSearchParams(location.search).has("thumb")
 
 /** True in a self-contained HTML export (no server, no files next to it). */
 export const exported = () => Boolean(window.__DECK_EXPORT__);
+
+/** sessionStorage key of the guided tour in progress inside a presentation (tour-deck.js). */
+export const TOUR_KEY = "deck-tour";
+
+/** True when the guided tour should run here: `?tour`, or a tour in progress in this tab. */
+export function tourPending() {
+  if (exported() || thumbnail() || window.top !== window || new URLSearchParams(location.search).has("presenter")) return false;
+  try {
+    return new URLSearchParams(location.search).has("tour") || JSON.parse(sessionStorage.getItem(TOUR_KEY))?.path === location.pathname;
+  } catch {
+    return false;
+  }
+}

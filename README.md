@@ -80,6 +80,10 @@ view, **stars**, **tags**, **archive**, **duplicate**, **delete** (after confirm
 description, date and venue of the talk. The **Upcoming** view lists dated talks, closest first.
 Library details are saved in `<presentation>/meta.json`, next to the slides.
 
+On the first visit, a welcome window explains what SlideDeck is, how to use it and what it
+can do, then offers a **guided tour** of the home page that continues inside a presentation.
+The **?** button at the bottom left (or the `?` key) opens it again at any time.
+
 ### Slides
 
 <img src="docs/images/demo-src.gif" alt="A slide explaining the SRC pooling framework, step by step" width="100%">
