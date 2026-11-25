@@ -8,20 +8,21 @@ import { settings, saveSettings } from "./ui.js";
 
 const W = 1920;
 const H = 1080;
-const RATIO = 2;
+/** Highest canvas resolution, in pixels per stage pixel. */
+const MAX_RATIO = 2;
 const HOLD_MS = 450;
 const HOLD_TOLERANCE = 6;
 const WHEEL = { inner: 38, outer: 118 };
 const LIMITS = { size: [2, 48], eraser: [12, 260] };
+/** Above this diameter (screen px), browsers refuse an image cursor: the ring is drawn by a div. */
+const NATIVE_CURSOR_MAX = 120;
 
 export function createPen(stage) {
   const canvas = document.createElement("canvas");
   canvas.className = "pen-layer";
-  canvas.width = W * RATIO;
-  canvas.height = H * RATIO;
   stage.appendChild(canvas);
-  const ctx = canvas.getContext("2d");
-  ctx.scale(RATIO, RATIO);
+  // `desynchronized` lets the browser show strokes without waiting for the page's next frame.
+  const ctx = canvas.getContext("2d", { desynchronized: true });
 
   const cursor = document.createElement("div");
   cursor.className = "pen-cursor";
@@ -29,17 +30,40 @@ export function createPen(stage) {
   const wheel = buildWheel();
   document.body.appendChild(wheel.node);
 
-  const state = { active: false, index: 0, stroke: null, hold: null, start: null, last: null, wheelOpen: false, erasing: false };
+  const state = { active: false, index: 0, stroke: null, hold: null, start: null, wheelOpen: false, erasing: false };
   const drawings = new Map();
   const strokes = () => {
     if (!drawings.has(state.index)) drawings.set(state.index, []);
     return drawings.get(state.index);
   };
 
+  // ---------- stage box and canvas resolution ----------
+
+  // The stage box is read once per layout change, never on each mouse move (that would
+  // force a synchronous layout at every event).
+  let box = null;
+  let ratio = 0;
+
+  function measure() {
+    box = stage.getBoundingClientRect();
+    if (!box.width) return;
+    // Canvas at the screen resolution, not a fixed 3840×2160: a smaller layer to composite.
+    const next = Math.min(MAX_RATIO, Math.max(0.25, (box.width * devicePixelRatio) / W));
+    if (Math.abs(next - ratio) < 0.01) return;
+    ratio = next;
+    canvas.width = Math.round(W * ratio);
+    canvas.height = Math.round(H * ratio);
+    redraw();
+  }
+
+  // deck.js resizes the stage through its inline style (fit), and the window through resize.
+  new MutationObserver(measure).observe(stage, { attributes: true, attributeFilter: ["style"] });
+  addEventListener("resize", measure);
+  measure();
+
   // ---------- drawing ----------
 
   function point(event) {
-    const box = stage.getBoundingClientRect();
     return [((event.clientX - box.left) * W) / box.width, ((event.clientY - box.top) * H) / box.height];
   }
 
@@ -52,12 +76,16 @@ export function createPen(stage) {
     ctx.lineJoin = "round";
   }
 
-  /** Smoothed segment: a curve between the midpoints of successive points. */
-  function segment(points, i) {
-    const [a, b, c] = [points[i - 2] ?? points[i - 1], points[i - 1], points[i]];
+  const mid = (a, b) => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+
+  /** Smoothed path from point `from` to the last one: curves between successive midpoints, in one stroke() call. */
+  function segments(points, from) {
     ctx.beginPath();
-    ctx.moveTo((a[0] + b[0]) / 2, (a[1] + b[1]) / 2);
-    ctx.quadraticCurveTo(b[0], b[1], (b[0] + c[0]) / 2, (b[1] + c[1]) / 2);
+    ctx.moveTo(...mid(points[from - 2] ?? points[from - 1], points[from - 1]));
+    for (let i = from; i < points.length; i++) {
+      const [b, c] = [points[i - 1], points[i]];
+      ctx.quadraticCurveTo(b[0], b[1], ...mid(b, c));
+    }
     ctx.stroke();
   }
 
@@ -71,16 +99,18 @@ export function createPen(stage) {
   function paint(stroke) {
     style(stroke);
     if (stroke.points.length === 1) return dot(stroke);
-    for (let i = 1; i < stroke.points.length; i++) segment(stroke.points, i);
+    segments(stroke.points, 1);
     // Finish the stroke up to the last point.
     const [b, c] = stroke.points.slice(-2);
     ctx.beginPath();
-    ctx.moveTo((b[0] + c[0]) / 2, (b[1] + c[1]) / 2);
+    ctx.moveTo(...mid(b, c));
     ctx.lineTo(c[0], c[1]);
     ctx.stroke();
   }
 
   function redraw() {
+    if (!ratio) return;
+    ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
     ctx.globalCompositeOperation = "source-over";
     ctx.clearRect(0, 0, W, H);
     strokes().forEach(paint);
@@ -88,10 +118,11 @@ export function createPen(stage) {
 
   function begin(event, erase) {
     const p = point(event);
-    state.stroke = { erase, color: settings.pen.color, size: erase ? settings.pen.eraser : settings.pen.size, points: [p], drawn: false };
+    state.stroke = { erase, color: settings.pen.color, size: erase ? settings.pen.eraser : settings.pen.size, points: [p], drawn: false, painted: 1 };
     state.start = p;
   }
 
+  /** Adds a point to the stroke: the drawing itself waits for the next frame. */
   function extend(event) {
     const stroke = state.stroke;
     const p = point(event);
@@ -104,15 +135,23 @@ export function createPen(stage) {
       stroke.drawn = true;
       cancelHold();
       strokes().push(stroke);
-      style(stroke);
-      for (let i = 1; i < stroke.points.length; i++) segment(stroke.points, i);
-      return;
     }
+    if (!flush.frame) flush.frame = requestAnimationFrame(flush);
+  }
+
+  /** Draws the points received since the last frame, at most once per frame. */
+  function flush() {
+    flush.frame = 0;
+    const stroke = state.stroke;
+    if (!stroke?.drawn || stroke.painted >= stroke.points.length) return;
     style(stroke);
-    segment(stroke.points, stroke.points.length - 1);
+    segments(stroke.points, stroke.painted);
+    stroke.painted = stroke.points.length;
   }
 
   function finish() {
+    cancelAnimationFrame(flush.frame);
+    flush.frame = 0;
     const stroke = state.stroke;
     state.stroke = null;
     cancelHold();
@@ -150,21 +189,27 @@ export function createPen(stage) {
   // ---------- cursor (stroke or eraser size) ----------
 
   let lastEvent = null;
+  let cursorKey = "";
+
+  /** Follows the pointer with a transform (no layout). Size and colour change only when needed. */
   function updateCursor(event = lastEvent) {
-    if (!event) return;
+    if (!event || !box?.width) return;
     lastEvent = event;
     const [x, y] = point(event);
+    cursor.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`;
     // Ring at the stroke size, never smaller than 14 px so it stays visible.
     const size = Math.max(14, state.erasing ? settings.pen.eraser : settings.pen.size);
-    Object.assign(cursor.style, {
-      left: `${x}px`,
-      top: `${y}px`,
-      width: `${size}px`,
-      height: `${size}px`,
-      borderColor: state.erasing ? "rgba(27, 42, 74, 0.7)" : settings.pen.color,
-      color: state.erasing ? "rgba(27, 42, 74, 0.7)" : settings.pen.color,
-    });
+    const color = state.erasing ? "rgba(27, 42, 74, 0.7)" : settings.pen.color;
+    const key = `${size}|${color}|${state.erasing}|${box.width}`;
+    if (key === cursorKey) return;
+    cursorKey = key;
+    Object.assign(cursor.style, { width: `${size}px`, height: `${size}px`, borderColor: color, color });
     cursor.classList.toggle("erasing", state.erasing);
+    // The pen ring is a real cursor, drawn by the system with no delay. The eraser, often too
+    // large for an image cursor, keeps the div that follows the pointer.
+    const native = state.erasing ? null : nativeCursor((size * box.width) / W, color);
+    canvas.style.cursor = native ?? "";
+    cursor.classList.toggle("native", Boolean(native));
   }
 
   function showSize() {
@@ -197,7 +242,14 @@ export function createPen(stage) {
     if (!state.active) return;
     if (state.wheelOpen) return wheel.hover(event.clientX, event.clientY);
     updateCursor(event);
-    if (state.stroke) extend(event);
+    if (!state.stroke) return;
+    // Every position the device reported since the last event (often several per frame),
+    // for smooth curves even when the hand moves fast.
+    const events = event.getCoalescedEvents?.() ?? [];
+    for (const e of events.length ? events : [event]) {
+      if (!state.stroke) break;
+      extend(e);
+    }
   });
 
   const release = (event) => {
@@ -234,6 +286,7 @@ export function createPen(stage) {
 
   function toggle(on = !state.active) {
     state.active = on;
+    if (on) measure();
     canvas.classList.toggle("active", on);
     cursor.classList.toggle("on", on);
     if (!on) {
@@ -264,6 +317,20 @@ export function createPen(stage) {
     },
     count: () => [...drawings.values()].reduce((n, list) => n + list.length, 0),
   };
+}
+
+/** CSS cursor drawing the pen ring at `diameter` screen pixels, or null when it is too large. */
+function nativeCursor(diameter, color) {
+  if (diameter > NATIVE_CURSOR_MAX) return null;
+  const size = Math.ceil(diameter + 6);
+  const c = size / 2;
+  const r = diameter / 2;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}">
+    <circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="white" stroke-opacity="0.85" stroke-width="3.5"/>
+    <circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="${color}" stroke-width="1.8"/>
+    <circle cx="${c}" cy="${c}" r="2" fill="${color}"/>
+  </svg>`;
+  return `url("data:image/svg+xml,${encodeURIComponent(svg)}") ${c} ${c}, crosshair`;
 }
 
 /** Colour wheel: sectors around the pointer, picked by releasing over one. */

@@ -3,6 +3,8 @@
  * and talk details. Thumbnails are the presentations themselves (iframe `?thumb`).
  */
 import { addStrings, lang, t, translatePage } from "./i18n.js";
+import { createOptions } from "./options.js";
+import { actionFor, loadStyle } from "./ui.js";
 import { setupWelcome } from "./welcome.js";
 
 const VIEWS = [
@@ -21,6 +23,7 @@ const STAR = '<path d="m12 4 2.4 5 5.4.6-4 3.7 1.1 5.3L12 16l-4.9 2.6 1.1-5.3-4-
 addStrings({
   en: {
     "home.new": "New presentation",
+    "home.settings": "Options (shortcuts, pen, language)",
     "home.search": "Search a presentation, a tag…",
     "home.sort": "Sort",
     "home.sortModified": "Recently modified",
@@ -113,6 +116,7 @@ addStrings({
   },
   fr: {
     "home.new": "Nouvelle présentation",
+    "home.settings": "Options (raccourcis, stylo, langue)",
     "home.search": "Rechercher une présentation, un tag…",
     "home.sort": "Trier",
     "home.sortModified": "Modifiées récemment",
@@ -607,6 +611,7 @@ document.addEventListener("click", async (event) => {
   else if (target.dataset.theme) pickTheme(target.dataset.theme);
   else if (action === "cancel") closeModals();
   else if (action === "help") welcome.open();
+  else if (action === "settings") options.toggle(true);
 });
 
 $(".hm-search input").addEventListener("input", (event) => {
@@ -620,6 +625,12 @@ $(".hm-sort").addEventListener("change", (event) => {
 });
 
 document.addEventListener("keydown", (event) => {
+  if (options.handleKey(event)) return event.preventDefault();
+  const typing = event.target.closest?.("input, textarea, select");
+  if (!typing && actionFor(event) === "options" && !document.querySelector(".hm-modal:not([hidden])")) {
+    event.preventDefault();
+    return options.toggle(true);
+  }
   if (event.key === "Escape") {
     closeMenu();
     closeModals();
@@ -633,6 +644,10 @@ document.addEventListener("keydown", (event) => {
 });
 
 addEventListener("focus", load);
+
+// Options window (gear button or `o`): the presentation's options, without Export.
+loadStyle("options.css");
+const options = createOptions({ tabs: ["look", "keys", "pen"], home: false });
 
 // Welcome window and guided tour (first visit, "?" button or key).
 const welcome = setupWelcome({

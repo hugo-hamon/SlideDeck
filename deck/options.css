@@ -31,11 +31,18 @@
   display: none;
   box-sizing: border-box;
   border: 2px solid;
+  top: 0;
+  left: 0;
   border-radius: 50%;
   transform: translate(-50%, -50%);
   pointer-events: none;
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.8);
+  will-change: transform;
 }
+
+/* The system draws the pen ring (image cursor): the div only carries the size label. */
+.pen-cursor.native { border-color: transparent !important; box-shadow: none; }
+.pen-cursor.native::before { display: none; }
 
 .pen-cursor.on { display: block; }
 .pen-cursor.hidden { display: none; }

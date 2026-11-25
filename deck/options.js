@@ -14,10 +14,14 @@ const TABS = [
 const icon = (paths) => `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${paths}</svg>`;
 const megabytes = (blob) => (blob.size / 1e6).toFixed(1);
 
-export function createOptions({ names, current, pen, onBackdrop, printPdf }) {
+/**
+ * `tabs` picks the tabs shown: the home page has no slides, so no Export tab and no pen
+ * (`pen` null hides the stroke counter and clear buttons). `home` shows the link back to it.
+ */
+export function createOptions({ names = [], current = () => 0, pen = null, onBackdrop, printPdf, tabs = TABS.map(([id]) => id), home = hasHome() }) {
   const base = new URL("./", location.href);
   const project = decodeURIComponent(location.pathname.split("/").filter(Boolean).at(-1) || "presentation");
-  const state = { open: false, tab: "export", format: "html", picked: new Set(), anchor: null, capture: null, busy: false, gif: null };
+  const state = { open: false, tab: tabs[0], format: "html", picked: new Set(), anchor: null, capture: null, busy: false, gif: null };
 
   const root = document.createElement("div");
   root.className = "opt-backdrop";
@@ -27,8 +31,8 @@ export function createOptions({ names, current, pen, onBackdrop, printPdf }) {
     <div class="opt-window" role="dialog" aria-label="${t("opt.title")}">
       <nav class="opt-nav">
         <div class="opt-brand">${t("opt.title")}</div>
-        ${TABS.map(([id, paths]) => `<button data-tab="${id}">${icon(paths)}<span>${t(`opt.${id}`)}</span></button>`).join("")}
-        ${hasHome() ? `<a class="opt-home" href="${HOME_URL}">${icon('<path d="M15 18l-6-6 6-6"/>')}<span>${t("opt.home")}</span></a>` : ""}
+        ${TABS.filter(([id]) => tabs.includes(id)).map(([id, paths]) => `<button data-tab="${id}">${icon(paths)}<span>${t(`opt.${id}`)}</span></button>`).join("")}
+        ${home ? `<a class="opt-home" href="${HOME_URL}">${icon('<path d="M15 18l-6-6 6-6"/>')}<span>${t("opt.home")}</span></a>` : ""}
         <div class="opt-hint">${t("opt.closeHint")}</div>
       </nav>
       <section class="opt-body"></section>
@@ -125,10 +129,9 @@ export function createOptions({ names, current, pen, onBackdrop, printPdf }) {
         <label>${t("opt.eraserSize")}<input type="range" data-pen="eraser" min="12" max="260" value="${settings.pen.eraser}" /><output>${Math.round(settings.pen.eraser)} px</output></label>
       </div>
       <div class="opt-actions">
-        <span class="opt-status">${t("opt.strokes", { n: pen.count() })}</span>
+        ${pen ? `<span class="opt-status">${t("opt.strokes", { n: pen.count() })}</span>` : ""}
         <button data-action="pen-reset">${t("opt.reset")}</button>
-        <button data-action="pen-clear">${t("opt.clearThis")}</button>
-        <button data-action="pen-clear-all">${t("opt.clearAll")}</button>
+        ${pen ? `<button data-action="pen-clear">${t("opt.clearThis")}</button><button data-action="pen-clear-all">${t("opt.clearAll")}</button>` : ""}
       </div>`;
   }
 
@@ -334,8 +337,10 @@ export function createOptions({ names, current, pen, onBackdrop, printPdf }) {
     state.capture = null;
     root.classList.toggle("open", on);
     if (on) {
-      if (!state.picked.size) state.picked = new Set([current() + 1]);
-      if (state.gif === null) probeGif();
+      if (tabs.includes("export")) {
+        if (!state.picked.size) state.picked = new Set([current() + 1]);
+        if (state.gif === null) probeGif();
+      }
       render();
     }
   }

@@ -102,13 +102,15 @@ kbd {
 
 .hm-side h3 { margin: 18px 10px 4px; font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); }
 .hm-none { margin: 4px 10px; color: var(--muted); font-size: 13px; }
-.hm-help {
+.hm-foot-actions { display: flex; gap: 8px; margin: auto 0 0 6px; }
+
+.hm-round {
   flex: none;
   display: grid;
   place-items: center;
   width: 36px;
   height: 36px;
-  margin: auto 0 0 6px;
+  padding: 0;
   border: 1px solid #d5d9e2;
   border-radius: 50%;
   background: #fff;
@@ -117,7 +119,7 @@ kbd {
   font-weight: 700;
 }
 
-.hm-help:hover { border-color: var(--accent); color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.hm-round:hover { border-color: var(--accent); color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
 .hm-foot { margin-top: auto; padding: 0 10px; color: var(--muted); font-size: 12px; }
 
 /* ---------- contenu ---------- */
@@ -222,8 +224,10 @@ kbd {
   font-weight: 600;
 }
 
-.hm-chip button { padding: 3px 4px 3px 10px; border: 0; background: none; color: inherit; }
-.hm-chip button + button { width: 0; padding: 3px 0; overflow: hidden; opacity: 0; transition: width 0.15s, opacity 0.15s; }
+/* Folded, the name is centred (10 px on each side). Unfolded, its right padding shrinks for the ×. */
+.hm-chip button { padding: 3px 10px; border: 0; background: none; color: inherit; transition: padding 0.15s; }
+.hm-chip:hover button:first-child { padding-right: 4px; }
+.hm-chip button + button { width: 0; padding: 3px 0; overflow: hidden; opacity: 0; transition: width 0.15s, padding 0.15s, opacity 0.15s; }
 .hm-chip:hover button + button { width: 20px; padding: 3px 8px 3px 2px; opacity: 1; }
 
 .hm-addtag {

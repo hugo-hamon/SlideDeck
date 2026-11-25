@@ -68,6 +68,8 @@ addStrings({
     "tour.home.star.body": "<p>The star keeps a presentation at the top. The <b>⋯</b> button opens its actions.</p>",
     "tour.home.menu.title": "Actions",
     "tour.home.menu.body": "<p>Edit the talk details (date, venue, description), duplicate it to start a variant, archive it or delete it.</p>",
+    "tour.home.settings.title": "Options",
+    "tour.home.settings.body": "<p>The interface language, keyboard shortcuts and pen colours. Inside a presentation, <kbd>{key}</kbd> opens the same window with the export tools too.</p>",
     "tour.home.help.title": "Help is here",
     "tour.home.help.body": "<p>This button opens the welcome window and the tour again, at any time.</p>",
     "tour.home.next.title": "Now, inside a presentation",
@@ -130,6 +132,8 @@ addStrings({
     "tour.home.star.body": "<p>L'étoile garde une présentation en tête de liste. Le bouton <b>⋯</b> ouvre ses actions.</p>",
     "tour.home.menu.title": "Actions",
     "tour.home.menu.body": "<p>Modifiez les informations de la présentation (date, lieu, description), dupliquez-la pour une variante, archivez-la ou supprimez-la.</p>",
+    "tour.home.settings.title": "Options",
+    "tour.home.settings.body": "<p>La langue de l'interface, les raccourcis clavier et les couleurs du stylo. Dans une présentation, <kbd>{key}</kbd> ouvre la même fenêtre, avec en plus l'export.</p>",
     "tour.home.help.title": "L'aide est ici",
     "tour.home.help.body": "<p>Ce bouton rouvre la fenêtre d'accueil et le tutoriel, à tout moment.</p>",
     "tour.home.next.title": "Maintenant, dans une présentation",
@@ -278,7 +282,10 @@ function playTour(home) {
       { target: ".hm-menu", placement: "right", enter: () => home.openMenu(card), leave: home.closeMenu, title: t("tour.home.menu.title"), body: t("tour.home.menu.body") },
     );
   }
-  steps.push({ target: ".hm-help", placement: "right", title: t("tour.home.help.title"), body: t("tour.home.help.body") });
+  steps.push(
+    { target: ".hm-settings", placement: "right", title: t("tour.home.settings.title"), body: t("tour.home.settings.body", { key: keyLabel(settings.shortcuts.options[0] ?? "—") }) },
+    { target: ".hm-help", placement: "right", title: t("tour.home.help.title"), body: t("tour.home.help.body") },
+  );
   if (card) {
     const go = () => {
       tour.end(true);
