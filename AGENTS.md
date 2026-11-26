@@ -24,7 +24,8 @@ SlideDeck/
 │                         # i18n.js (langue de l'interface : anglais par défaut, français)
 ├── tools/                # serve.py (aperçu + accueil), library.py (accueil), capture.py (storyboard), review.py (retours), gif.py (export GIF), new.py
 ├── templates/presentation/
-└── presentations/<année>/<nom_en_snake_case>/
+├── examples/<nom>/        # exemple livré avec le dépôt (même structure, sans année)
+└── presentations/<année>/<nom_en_snake_case>/   # ignoré par Git (dépôt privé à part)
     ├── index.html        # ordre des slides, pied de page
     ├── pages/*.js        # une slide par fichier
     ├── assets/           # images, données (si nécessaire)

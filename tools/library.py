@@ -1,5 +1,8 @@
 """Presentation library for the home page of tools/serve.py.
 
+Presentations live in `presentations/<year>/<name>`, and the bundled examples in
+`examples/<name>` (shown, edited, duplicated and deleted the same way).
+
 Each presentation keeps its library details (tags, archive, star, description, date, venue)
 in `meta.json`, next to its `index.html`: they follow the folder if it is moved.
 """
@@ -16,6 +19,7 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parent.parent
 PRESENTATIONS = ROOT / "presentations"
+EXAMPLES = ROOT / "examples"
 META = "meta.json"
 SKIPPED = {".inspection", "export", "feedback.json", "notes.json", "__pycache__"}
 NAME = re.compile(r"^[a-z0-9][a-z0-9_]*$")
@@ -23,9 +27,10 @@ DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 
 def folder_of(path: str) -> Path | None:
-    """presentations/<year>/<name> → folder, if it really is a presentation."""
+    """presentations/<year>/<name> or examples/<name> → folder, if it really is a presentation."""
     folder = (ROOT / path.strip("/")).resolve()
-    if PRESENTATIONS not in folder.parents or not (folder / "index.html").is_file():
+    inside = PRESENTATIONS in folder.parents or EXAMPLES in folder.parents
+    if not inside or not (folder / "index.html").is_file():
         return None
     return folder
 
@@ -70,7 +75,8 @@ def modified(folder: Path) -> float:
 
 def entries() -> list[dict[str, Any]]:
     out = []
-    for index in sorted(PRESENTATIONS.glob("*/*/index.html")):
+    indexes = sorted(PRESENTATIONS.glob("*/*/index.html")) + sorted(EXAMPLES.glob("*/index.html"))
+    for index in indexes:
         folder = index.parent
         meta = read_meta(folder)
         out.append(
@@ -167,6 +173,6 @@ def delete(data: dict[str, Any]) -> str:
     path = folder.relative_to(ROOT).as_posix()
     shutil.rmtree(folder)
     year = folder.parent
-    if year != PRESENTATIONS and not any(year.iterdir()):
+    if year not in (PRESENTATIONS, EXAMPLES) and not any(year.iterdir()):
         year.rmdir()
     return path

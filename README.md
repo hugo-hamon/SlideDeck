@@ -59,7 +59,7 @@ python3 tools/serve.py                            # → http://localhost:8000/
 ```
 
 Open the printed address: the home page lists every presentation. Click **New presentation**
-to start one from a template, or open the example course in `presentations/2026/`.
+to start one from a template, or open the five-slide example in `examples/getting_started/`.
 
 Eleven templates are available, each previewed live in the dialog: Paper (default), Madrid
 (the Beamer theme from Overleaf), Metropolis, Swiss, Midnight, Aurora, Editorial, Neo-brutalist,
@@ -75,7 +75,7 @@ same building blocks (`title`, `cover`, `bullets`, `box` of `deck/components.js`
 
 <img src="docs/images/home.png" alt="Home page with three presentations, tags and the Upcoming view" width="100%">
 
-Every presentation of `presentations/` with a live thumbnail. Search (`/`), sort, grid or list
+Every presentation of `presentations/` and `examples/` with a live thumbnail. Search (`/`), sort, grid or list
 view, **stars**, **tags**, **archive**, **duplicate**, **delete** (after confirmation) and **Edit details…** for the title,
 description, date and venue of the talk. The **Upcoming** view lists dated talks, closest first.
 Library details are saved in `<presentation>/meta.json`, next to the slides.
@@ -92,8 +92,8 @@ presentation.
 
 The visual style is the one of a paper figure: paper background, navy ink, EB Garamond, three
 category colours (blue, green, red) with translucent fills. Objects keep their identity: nodes
-move and merge rather than disappear and reappear. The example course in
-`presentations/2026/pooling_course` (in French) has slides built this way.
+move and merge rather than disappear and reappear. The example in
+`examples/getting_started` has slides built this way.
 
 ### Presenter view (`s`)
 
@@ -231,6 +231,8 @@ deck/            the shared engine
 tools/           serve.py · library.py · capture.py · review.py · gif.py · new.py
 templates/       starting point for new presentations
 presentations/   <year>/<name>/ index.html · pages/*.js · assets/ · meta.json · notes.json
+                 (ignored by Git, so you can keep it in a repository of its own)
+examples/        <name>/ a bundled example, shown on the home page like your presentations
 docs/            logo and README images
 ```
 
