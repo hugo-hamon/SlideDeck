@@ -2,6 +2,7 @@
  * Home page of tools/serve.py: every presentation, with search, tags, stars, archives
  * and talk details. Thumbnails are the presentations themselves (iframe `?thumb`).
  */
+import { createHomeBib } from "./home-bib.js";
 import { addStrings, lang, t, translatePage } from "./i18n.js";
 import { createOptions } from "./options.js";
 import { actionFor, loadStyle } from "./ui.js";
@@ -19,6 +20,7 @@ const AUTHOR_KEY = "deck-home-author";
 const THEMES = ["paper", "madrid", "metropolis", "swiss", "midnight", "aurora", "editorial", "brutalist", "blueprint", "chalkboard", "nord"];
 const icon = (paths, size = 18) => `<svg viewBox="0 0 24 24" width="${size}" height="${size}">${paths}</svg>`;
 const STAR = '<path d="m12 4 2.4 5 5.4.6-4 3.7 1.1 5.3L12 16l-4.9 2.6 1.1-5.3-4-3.7 5.4-.6Z"/>';
+const BOOK = '<path d="M5 4h10a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3Z"/><path d="M5 17a3 3 0 0 1 3-3h10M9 8h5"/>';
 
 addStrings({
   en: {
@@ -276,9 +278,11 @@ function visible() {
 function render() {
   const active = state.items.filter((item) => !item.archived);
   const counts = { upcoming: active.filter((i) => i.date && i.date >= today()).length, all: active.length, starred: active.filter((i) => i.starred).length, archived: state.items.length - active.length };
-  $(".hm-views").innerHTML = VIEWS.map(
-    ([id, paths]) => `<button data-view="${id}" class="${state.view === id && !state.tag ? "on" : ""}">${icon(paths)}<span>${t(`home.${id}`)}</span><small>${counts[id]}</small></button>`,
-  ).join("");
+  $(".hm-views").innerHTML =
+    VIEWS.map(
+      ([id, paths]) => `<button data-view="${id}" class="${state.view === id && !state.tag ? "on" : ""}">${icon(paths)}<span>${t(`home.${id}`)}</span><small>${counts[id]}</small></button>`,
+    ).join("") +
+    `<hr /><button data-view="bib" class="${state.view === "bib" ? "on" : ""}">${icon(BOOK)}<span>${t("bib.title")}</span>${bib.missing() ? `<i class="hm-alert" title="${t("bib.filter.missing")}"></i>` : ""}<small>${bib.count()}</small></button>`;
 
   const tags = new Map();
   for (const item of state.items) for (const tag of item.tags) tags.set(tag, (tags.get(tag) ?? 0) + (item.archived ? 0 : 1));
@@ -287,6 +291,17 @@ function render() {
       .sort(([a], [b]) => a.localeCompare(b, lang()))
       .map(([tag, n]) => `<button data-tag="${escape(tag)}" class="${state.tag === tag ? "on" : ""}"><i style="background: ${tagColor(tag)}"></i><span>${escape(tag)}</span><small>${n}</small></button>`)
       .join("") || `<p class="hm-none">${t("home.noTags")}</p>`;
+
+  // Bibliography view: the cards and their tools give way to the references.
+  const inBib = state.view === "bib";
+  for (const node of [$(".hm-cards"), $(".hm-sort"), $(".hm-bar .hm-segment")]) node.hidden = inBib;
+  $(".hm-bib").hidden = !inBib;
+  $(".hm-search input").placeholder = inBib ? t("bib.search") : t("home.search");
+  if (inBib) {
+    $(".hm-empty").hidden = true;
+    $(".hm-title").textContent = t("bib.title");
+    return bib.render(state.query);
+  }
 
   const list = visible();
   const view = t(`home.${state.view}`);
@@ -595,7 +610,11 @@ document.addEventListener("click", async (event) => {
   const item = card && state.items.find((i) => i.path === card.dataset.path);
   const { view, tag, untag, layout, action, menu } = target.dataset;
   if (view) (state.view = view), (state.tag = null), render();
-  else if (tag !== undefined) (state.tag = state.tag === tag && !card ? null : tag), render();
+  else if (tag !== undefined) {
+    if (state.view === "bib") state.view = "all";
+    state.tag = state.tag === tag && !card ? null : tag;
+    render();
+  }
   else if (untag !== undefined) update(item.path, { tags: item.tags.filter((t) => t !== untag) });
   else if (layout) {
     state.layout = layout;
@@ -643,7 +662,10 @@ document.addEventListener("keydown", (event) => {
   }
 });
 
-addEventListener("focus", load);
+addEventListener("focus", () => (load(), bib.load()));
+
+// Bibliography view (sidebar): presentations/references.bib.
+const bib = createHomeBib({ section: $(".hm-bib"), toast, onChange: () => render() });
 
 // Options window (gear button or `o`): the presentation's options, without Export.
 loadStyle("options.css");
@@ -709,3 +731,4 @@ function escape(text) {
 }
 
 load();
+bib.load();

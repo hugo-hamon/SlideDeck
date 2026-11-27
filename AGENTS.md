@@ -21,17 +21,20 @@ SlideDeck/
 │                         # home.* (page d'accueil de serve.py : liste, tags, archives),
 │                         # welcome.* (fenêtre d'accueil), tour.* + tour-deck.js (tutoriel guidé),
 │                         # presenter.js + notes.js (touche s), overview.js (g), laser.js (l), print.js (PDF), mount.js,
-│                         # i18n.js (langue de l'interface : anglais par défaut, français)
-├── tools/                # serve.py (aperçu + accueil), library.py (accueil), capture.py (storyboard), review.py (retours), gif.py (export GIF), new.py
+│                         # i18n.js (langue de l'interface : anglais par défaut, français),
+│                         # bib.js + bibliography.js (citations, fenêtre b)
+├── tools/                # serve.py (aperçu + accueil), library.py (accueil), capture.py (storyboard), review.py (retours), gif.py (export GIF), bib.py (bibliographie), new.py
 ├── templates/presentation/
 ├── examples/<nom>/        # exemple livré avec le dépôt (même structure, sans année)
-└── presentations/<année>/<nom_en_snake_case>/   # ignoré par Git (dépôt privé à part)
-    ├── index.html        # ordre des slides, pied de page
-    ├── pages/*.js        # une slide par fichier
-    ├── assets/           # images, données (si nécessaire)
-    ├── meta.json         # tags, archive, favori, description, date, lieu (page d'accueil)
-    ├── notes.json        # notes de l'orateur (vue présentateur), clé « nomDeSlide#rang »
-    └── README.md         # intention, public, commandes
+└── presentations/        # ignoré par Git (dépôt privé à part)
+    ├── references.bib    # bibliographie BibTeX commune à toutes les présentations
+    └── <année>/<nom_en_snake_case>/
+        ├── index.html        # ordre des slides, pied de page
+        ├── pages/*.js        # une slide par fichier
+        ├── assets/           # images, données (si nécessaire)
+        ├── meta.json         # tags, archive, favori, description, date, lieu (page d'accueil)
+        ├── notes.json        # notes de l'orateur (vue présentateur), clé « nomDeSlide#rang »
+        └── README.md         # intention, public, commandes
 ```
 
 - Nouvelle présentation : `python3 tools/new.py presentations/<année>/<nom> --title "…" [--theme madrid]`.
@@ -77,6 +80,25 @@ export default function maSlide(root) {      // root : <section> vide, scène 19
 - Pas de `tl.set()` ni de tween de durée nulle placé exactement sur un arrêt : il est rendu
   à l'arrêt précédent. Utiliser un `fromTo` court avec `immediateRender: false`.
 - Un élément cloné hérite de l'état `from` de l'original : le réinitialiser avec `gsap.set`.
+
+### Citations
+
+- La bibliographie est le `references.bib` le plus proche au-dessus de la présentation
+  (en général `presentations/references.bib`, commun à toutes). Style auteur-année.
+- Citer avec `cite("clé")` → [Kipf & Welling, 2017] ou `citet("clé")` → Kipf & Welling (2017),
+  qui renvoient du HTML à placer dans un `label`, une puce ou une `box`. Plusieurs clés et une
+  page : `cite("a", "b", { page: "p. 3" })`.
+- Appeler `cite()` **dans la fonction de slide**, jamais au niveau du module (constante en haut
+  du fichier) : la bibliographie n'est chargée qu'au démarrage. Dans une constante, utiliser une
+  fonction fléchée `() => citet("clé")`. Écrire la clé en toutes lettres, sans variable, pour que
+  `tools/bib.py` et `references()` la trouvent.
+- Ne jamais inventer de clé. Vérifier avec `python3 tools/bib.py <présentation>`, qui liste les
+  clés citées et signale les inconnues (affichées en rouge `[?clé]` et dans `report.json`).
+  Pour une référence absente, l'ajouter avec `--add <DOI ou arXiv>` ou demander à l'utilisateur.
+- Slide finale : `references(root)` liste toutes les clés citées dans les sources de la
+  présentation, triées par auteur puis année, avec le style du thème. Elle renvoie
+  `{ heading, items }` à animer. Liste longue : la répartir sur plusieurs slides avec
+  `{ start, count }`, ou choisir les clés avec `{ keys }`.
 
 ## 4. Direction artistique
 

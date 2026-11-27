@@ -5,6 +5,7 @@
  * Modules are rewritten to bare specifiers "@deck-export/N" and served by the import map
  * as data: URLs, which avoids any relative resolution outside the server.
  */
+import { bibliography } from "./bib.js";
 import { UI_STYLES } from "./ui.js";
 
 const IMAGE = /\.(svg|png|jpe?g|gif|webp)$/i;
@@ -66,7 +67,14 @@ export async function exportHtml({ slides, onProgress = () => {} }) {
   try {
     notes = (await (await fetch(new URL("__notes", base), { cache: "no-store" })).json()).notes ?? {};
   } catch {}
-  flag.textContent = `window.__DECK_EXPORT__ = ${JSON.stringify({ slides, date: new Date().toISOString() })};\nwindow.__DECK_NOTES__ = ${JSON.stringify(notes).replace(/</g, "\\u003c")};`;
+  // The bibliography travels with the page: cite() and the `b` window read it offline.
+  const { entries, cited, file, project } = bibliography();
+  const safe = (data) => JSON.stringify(data).replace(/</g, "\\u003c");
+  flag.textContent = [
+    `window.__DECK_EXPORT__ = ${safe({ slides, date: new Date().toISOString() })};`,
+    `window.__DECK_NOTES__ = ${safe(notes)};`,
+    `window.__DECK_BIB__ = ${safe({ file, project, cited, usage: {}, entries: entries.filter((e) => cited.includes(e.key)) })};`,
+  ].join("\n");
   page.head.prepend(flag);
 
   onProgress("Assemblage…");

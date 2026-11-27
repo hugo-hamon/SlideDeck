@@ -8,6 +8,3 @@ node_modules/
 feedback.json
 export/
 presentations/
-
-# Personal presentations live in their own (private) repository
-presentations/

@@ -43,6 +43,7 @@ view with notes, a pen and a laser pointer for remote teaching, and HTML, PDF or
 | 🗂️ **Home page** | All your presentations with live thumbnails, search, tags, stars, archive, talk date and venue, and an *Upcoming* view. |
 | 🎤 **Presenter view** | A second window with the next step, editable speaker notes, a timer and the clock, synced with the projected window. |
 | ✏️ **Pen & laser pointer** | Draw over the slides without any menu on screen (colour wheel on long press), or point with a red laser dot. |
+| 📚 **Bibliography** | One `references.bib` shared by all your presentations, fed by pasting a DOI, an arXiv identifier or BibTeX. `cite("key")` gives [Kipf & Welling, 2017] and `references()` builds the final slide. |
 | 📦 **Export** | A single offline `.html` file, a vector PDF (one page per step or per slide), or animated GIFs. |
 | 🤖 **Agent-friendly** | An agent writes the slides, captures every step in a headless browser, checks its own work, and reads the feedback you draw on the slides. |
 | 🌍 **English / French** | The interface is in English by default, French in one click. |
@@ -153,6 +154,26 @@ Circle what is wrong, drop numbered notes, write a general note per slide. Feedb
 `<presentation>/feedback.json` with the circled elements (tag, text, LaTeX, position), so an
 agent can find the code to change. See [Working with an AI agent](#working-with-an-ai-agent).
 
+### Bibliography (`b`)
+
+Every presentation reads the nearest `references.bib` above its folder, usually
+`presentations/references.bib`, which all your talks share. The `b` window lists it:
+
+- **Add**: paste a DOI, an arXiv identifier (or their URLs) or BibTeX, several at once. The
+  server fetches the BibTeX, names the key `lastname+year` (`kipf2017`) and skips a work that is
+  already there.
+- **Find and copy**: search by author, title or key, filter on the works cited in this
+  presentation, and copy `cite("key")` to paste it in an Edit-mode note or a message to the
+  agent, which adds it to the slide. Each entry shows the other presentations that cite it.
+
+On the **home page**, the *Bibliography* view manages the whole file: every reference with the
+presentations and slide numbers citing it (a click opens the slide), filters *Cited*, *Not cited*
+and *Missing* (keys cited in a slide but absent from the file), addition, BibTeX editing and
+deletion. Renaming a cited key can update the `cite()` calls in the slides at the same time.
+
+The file stays plain BibTeX, so you can edit it by hand (the slides reload) or reuse it in LaTeX.
+In an exported HTML file the window is read-only and only carries the cited works.
+
 ## Keyboard shortcuts
 
 All of them can be changed in **Options → Shortcuts**.
@@ -164,7 +185,8 @@ All of them can be changed in **Options → Shortcuts**.
 | `Home` / `End` | first / last slide | `l` | laser pointer |
 | `f` | fullscreen | `p` | pen (`Ctrl+Z` undo, `c` clear) |
 | `o` | options | `e` | edit mode |
-| `h` | home page | `Esc` | leave the current mode |
+| `h` | home page | `b` | bibliography |
+| `Esc` | leave the current mode | | |
 
 ## Writing slides
 
@@ -195,6 +217,29 @@ captures are exact. Shared building blocks (SVG, labels, KaTeX, arrows) are in
 ([`deck/theme.css`](deck/theme.css)). The full rules (structure, design, motion) are in
 [`AGENTS.md`](AGENTS.md).
 
+**Citations** use the author-year style. `cite()` and `citet()` return HTML to put in any text,
+and `references()` builds the references slide in the look of the presentation's theme:
+
+```js
+import { cite, citet, references } from "deck/components.js";
+
+label(root, `Message passing ${cite("kipf2017")}`, 960, 900, 28);   // [Kipf & Welling, 2017]
+bullets(root, [`${citet("grattarola2024")} compare pooling methods`]); // Grattarola et al. (2024)
+cite("kipf2017", "grattarola2024", { page: "p. 3" });                // several works, a page
+
+export default function bibliography(root) {      // last slide: every work cited in pages/*.js
+  const { heading, items } = references(root);    // { start, count } to split a long list
+  const tl = gsap.timeline({ defaults: { ease: "expo.out" } });
+  tl.from(heading, { opacity: 0, y: -16, duration: 0.7 });
+  tl.from(items, { opacity: 0, y: 16, duration: 0.6, stagger: 0.05 }, "<0.2");
+  return tl;
+}
+```
+
+An unknown key shows as a red **[?key]** and is reported by `tools/capture.py`. Call `cite()`
+inside the slide function (the bibliography is loaded when the deck starts) and write the key in
+full, so that `references()` and the home page find it.
+
 ## Working with an AI agent
 
 SlideDeck is designed to be authored with a coding agent (Claude Code, Codex…), which follows
@@ -210,6 +255,8 @@ SlideDeck is designed to be authored with a coding agent (Claude Code, Codex…)
 3. **You give feedback on the slides**: press `e`, circle and comment, then tell the agent
    *"read my feedback"*. It runs `tools/review.py`, which produces a summary and one annotated
    capture per step.
+4. **You cite a work**: copy `cite("key")` from the `b` window and write *"add cite("kipf2017")
+   after the definition on slide 3"*, in the chat or in an Edit-mode note.
 
 ## Command-line tools
 
@@ -220,6 +267,7 @@ SlideDeck is designed to be authored with a coding agent (Claude Code, Codex…)
 | `.venv/bin/python tools/capture.py <presentation> [--slide N] [--frames 2]` | One image per step → `.inspection/storyboard.jpg` and `report.json`. |
 | `.venv/bin/python tools/review.py <presentation> [--clear]` | Edit-mode feedback → `.inspection/review/review.md` and annotated captures. |
 | `.venv/bin/python tools/gif.py <presentation> [--slide 3 5] [--combined]` | Animated GIFs (`--fps`, `--width`, `--hold`, `--once`). |
+| `python3 tools/bib.py <presentation> [--add DOI arXiv file.bib…]` | Shared bibliography: file used, cited keys (unknown ones flagged), additions. |
 
 ## Project layout
 
@@ -227,10 +275,12 @@ SlideDeck is designed to be authored with a coding agent (Claude Code, Codex…)
 deck/            the shared engine
                  deck.js (navigation), components.js, theme.css, themes/*.css (templates)
                  options.*, pen.js, laser.js, presenter.js + notes.js, overview.js,
-                 export.js (HTML), print.js (PDF), review.* (edit mode), home.*, i18n.js
-tools/           serve.py · library.py · capture.py · review.py · gif.py · new.py
+                 export.js (HTML), print.js (PDF), review.* (edit mode), home.*, i18n.js,
+                 bib.js + bibliography.js (citations and the b window)
+tools/           serve.py · library.py · capture.py · review.py · gif.py · new.py · bib.py
 templates/       starting point for new presentations
 presentations/   <year>/<name>/ index.html · pages/*.js · assets/ · meta.json · notes.json
+                 references.bib (bibliography shared by every presentation)
                  (ignored by Git, so you can keep it in a repository of its own)
 examples/        <name>/ a bundled example, shown on the home page like your presentations
 docs/            logo and README images
@@ -238,10 +288,7 @@ docs/            logo and README images
 
 ## Roadmap
 
-- **Templates on creation**: choose "course", "conference talk" or "short talk" in the
-  *New presentation* dialog, with a title slide, outline, section slides and references ready.
-- **Bibliography from the interface**: add references (DOI, arXiv, BibTeX paste) from the
-  options window, cite them in slides (`cite("grattarola2022")`) and generate a references slide.
+- **MCQ / quiz slides**: a specific slide for multiple-choice questions.
 - **Shared component library**: promote the building blocks written for courses (comparison
   panels, assignment matrix, SEL → RED → CON stepper…) to `deck/components.js`, with a gallery.
 

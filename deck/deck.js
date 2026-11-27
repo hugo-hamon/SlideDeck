@@ -1,4 +1,6 @@
 import { gsap } from "gsap";
+import { loadBibliography } from "./bib.js";
+import { createBibliography } from "./bibliography.js";
 import { createLaser } from "./laser.js";
 import { mountSlide, renderFooter, setPage } from "./mount.js";
 import { createNotes, noteKeys } from "./notes.js";
@@ -35,8 +37,12 @@ export async function fontsReady() {
   await Promise.all(families.flatMap((family) => ["400", "600"].map((weight) => document.fonts.load(`${weight} 44px ${family}`).catch(() => []))));
 }
 
-/** Starts the presentation: each slide is a function (element) => GSAP timeline. */
-export function startDeck(allSlides, { footer } = {}) {
+/**
+ * Starts the presentation: each slide is a function (element) => GSAP timeline.
+ * The shared bibliography is loaded first, so that `cite()` can format its labels.
+ */
+export async function startDeck(allSlides, { footer } = {}) {
+  await loadBibliography();
   // HTML export: only the chosen slides are kept, with their original numbers.
   const kept = window.__DECK_EXPORT__?.slides?.filter((n) => n >= 1 && n <= allSlides.length);
   const numbers = kept?.length ? kept : allSlides.map((_, i) => i + 1);
@@ -60,6 +66,7 @@ export function startDeck(allSlides, { footer } = {}) {
     (await import("./print.js")).printSlides({ slides, numbers, footer, picked, perStep, onProgress });
   const options = createOptions({ names, current: () => state.index, pen, printPdf });
   const notes = createNotes(noteKeys(names));
+  const bib = createBibliography();
   const overview = createOverview({ slides, numbers, names, current: () => state.index, onPick: (index) => go(index, 0, false) });
   // Navigation received from the other window (presenter ↔ audience): applied without echoing it.
   const apply = {
@@ -168,10 +175,12 @@ export function startDeck(allSlides, { footer } = {}) {
       pen.toggle(false);
       laser.toggle();
     },
+    bib: () => bib.toggle(),
   };
   addEventListener("keydown", (event) => {
     if (thumbnail()) return;
     if (options.handleKey(event)) return event.preventDefault();
+    if (bib.handleKey(event)) return event.preventDefault();
     if (overview.handleKey(event, actionFor(event))) return event.preventDefault();
     if (event.target.closest?.("input, textarea, select, [contenteditable]")) return;
     if (review.handleKey(event)) return event.preventDefault();

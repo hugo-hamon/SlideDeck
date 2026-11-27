@@ -23,6 +23,7 @@ export const ACTIONS = {
   presenter: ["s"],
   overview: ["g"],
   laser: ["l"],
+  bib: ["b"],
 };
 
 /** Backdrops around the stage, where "slide" reuses the paper colour (labels: `backdrop.<id>`). */

@@ -210,3 +210,28 @@ body {
 .box-blue { --c: var(--blue); --c-fill: var(--blue-fill); }
 .box-green { --c: var(--green); --c-fill: var(--green-fill); }
 .box-red { --c: var(--red); --c-fill: var(--red-fill); }
+
+/* ---------- citations and references slide (components.js: cite, citet, references) ---------- */
+
+.cite, .citet { white-space: nowrap; }
+.cite { color: var(--ink-soft); }
+.cite-missing { color: var(--red); font-weight: 600; }
+
+.references {
+  position: absolute;
+  left: 160px;
+  top: 220px;
+  width: 1600px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 30px;
+  line-height: 1.35;
+}
+
+/* Hanging indent, as in a paper's reference list. */
+.references li {
+  margin-bottom: 22px;
+  padding-left: 48px;
+  text-indent: -48px;
+}

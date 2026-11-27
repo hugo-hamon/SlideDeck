@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import parse_qs, unquote, urlsplit
 
+import bib
 import library
 import new
 
@@ -24,25 +25,33 @@ FEEDBACK = "feedback.json"
 NOTES = "notes.json"
 VENV_PYTHON = ROOT / ".venv" / "bin" / "python"
 JOBS: dict[str, dict[str, Any]] = {}
+# references.bib written by the `b` window: mtime after the write → mtime before it.
+# The watcher keeps seeing the old date, so adding a reference does not reload the page.
+SELF_WRITES: dict[Path, tuple[float, float]] = {}
 
 
-def latest_change(folders: list[Path]) -> float:
+def latest_change(folders: list[Path], files: tuple[Path, ...] = ()) -> float:
     """Date of the latest change among the watched files.
 
     Edit-mode feedback, notes, library details and hidden folders (.inspection…) are
-    ignored: saving them must not reload the page.
+    ignored: saving them must not reload the page. `files` are watched too (the shared
+    bibliography), unless the server wrote them itself from the `b` window.
     """
-    return max(
-        (
-            p.stat().st_mtime
-            for f in folders
-            for p in f.rglob("*")
-            if p.suffix in WATCHED
-            and p.name not in (FEEDBACK, NOTES, library.META)
-            and not any(part.startswith(".") for part in p.relative_to(f).parts)
-        ),
-        default=0.0,
+    watched = (
+        p
+        for f in folders
+        for p in f.rglob("*")
+        if p.suffix in WATCHED
+        and p.name not in (FEEDBACK, NOTES, library.META)
+        and not any(part.startswith(".") for part in p.relative_to(f).parts)
     )
+    dates = [p.stat().st_mtime for p in watched]
+    for file in files:
+        if file.exists():
+            date = file.stat().st_mtime
+            written, before = SELF_WRITES.get(file, (None, 0.0))
+            dates.append(before if date == written else date)
+    return max(dates, default=0.0)
 
 
 def project_folder(url: str, suffix: str) -> Path | None:
@@ -149,6 +158,14 @@ def send_json(handler: SimpleHTTPRequestHandler, data: object, status: int = 200
     handler.wfile.write(body)
 
 
+def send_bib(handler: SimpleHTTPRequestHandler, url: str) -> bool:
+    """<presentation>/__bib → shared bibliography (entries, citations), if it is one."""
+    if (project := project_folder(url, "__bib")) is None:
+        return False
+    send_json(handler, bib.payload(project))
+    return True
+
+
 def send_feedback(handler: SimpleHTTPRequestHandler, target: Path) -> None:
     """Returns the saved feedback, or an empty object (no 404 in the console)."""
     body = target.read_bytes() if target.exists() else b"{}"
@@ -177,10 +194,14 @@ class DeckHandler(SimpleHTTPRequestHandler):
             super().do_GET()
         elif path == "/__library":
             send_json(self, library.entries())
+        elif path == "/__bib":
+            send_json(self, bib.payload())
         elif path.startswith("/__template/"):
             self.template_get(path.removeprefix("/__template/"))
         elif (target := feedback_file(self.path)) is not None:
             send_feedback(self, target)
+        elif send_bib(self, self.path):
+            pass
         elif "/__export/" in self.path:
             self.export_get()
         else:
@@ -191,6 +212,9 @@ class DeckHandler(SimpleHTTPRequestHandler):
         theme, _, name = rest.partition("/")
         if name in ("__feedback", "__notes"):
             send_json(self, {})
+            return
+        if name == "__bib":
+            send_json(self, {"file": "", "project": "", "entries": [], "cited": [], "usage": {}})
             return
         file = (new.TEMPLATE / (name or "index.html")).resolve()
         if theme not in new.themes() or new.TEMPLATE not in file.parents or not file.is_file():
@@ -247,11 +271,54 @@ class DeckHandler(SimpleHTTPRequestHandler):
         except ValueError as error:
             send_json(self, {"error": str(error)}, 400)
 
+    def bib_post(self, project: Path) -> None:
+        """`b` window: adds BibTeX, DOIs or arXiv identifiers to the shared bibliography."""
+        try:
+            data = json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0))) or b"{}")
+        except ValueError:
+            self.send_error(400)
+            return
+        target = bib.bib_file(project)
+        # Date the watcher last saw: kept across several additions in a row.
+        date = target.stat().st_mtime if target.exists() else 0.0
+        written, seen = SELF_WRITES.get(target, (None, date))
+        before = seen if date == written else date
+        result = bib.add(target, str(data.get("input", "")))
+        if result["added"]:
+            SELF_WRITES[target] = (target.stat().st_mtime, before)
+        send_json(self, {**result, **bib.payload(project)})
+
+    def collection_bib_post(self, action: str) -> None:
+        """Home page: add, edit or delete references of presentations/references.bib."""
+        try:
+            data = json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0))) or b"{}")
+            target = bib.COLLECTION / bib.BIB
+            if action == "add":
+                result = bib.add(target, str(data.get("input", "")))
+            elif action == "edit":
+                result = bib.edit(
+                    target, str(data["key"]), str(data["bibtex"]), bool(data.get("rename"))
+                )
+            elif action == "delete":
+                result = bib.delete(target, str(data["key"]))
+            else:
+                self.send_error(404)
+                return
+            send_json(self, {**result, **bib.payload()})
+        except (ValueError, KeyError, OSError) as error:
+            send_json(self, {"error": str(error)}, 400)
+
     def do_POST(self) -> None:
-        """Edit-mode feedback, notes, GIF export or the home page library."""
+        """Edit-mode feedback, notes, bibliography, GIF export or the home page library."""
         path = urlsplit(self.path).path
         if path.startswith("/__library"):
             self.library_post(path.removeprefix("/__library").strip("/") or "update")
+            return
+        if path.startswith("/__bib/"):
+            self.collection_bib_post(path.removeprefix("/__bib/"))
+            return
+        if (project := project_folder(self.path, "__bib")) is not None:
+            self.bib_post(project)
             return
         if (project := project_folder(self.path, "__export/gif")) is not None:
             if gif_python() is None:
@@ -293,13 +360,14 @@ class DeckHandler(SimpleHTTPRequestHandler):
         page = urlsplit(self.headers.get("Referer", "")).path
         project = library.folder_of(unquote(page).rsplit("/", 1)[0]) if page else None
         self.folders = [ROOT / "deck"] + ([project] if project else [])
-        last = latest_change(self.folders)
+        files = (bib.bib_file(project),) if project else ()
+        last = latest_change(self.folders, files)
         quiet = 0.0
         try:
             while True:
                 time.sleep(POLL_SECONDS)
                 quiet += POLL_SECONDS
-                now = latest_change(self.folders)
+                now = latest_change(self.folders, files)
                 if now != last:
                     last, quiet = now, 0.0
                     self.wfile.write(b"data: reload\n\n")

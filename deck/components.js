@@ -1,5 +1,6 @@
 import { gsap } from "gsap";
 import katex from "katex";
+import { authorYear, bibliography, escape, fullReference, sortKeys, warnMissing } from "./bib.js";
 
 const NS = "http://www.w3.org/2000/svg";
 const px = (value) => (value === undefined ? "" : `${value}px`);
@@ -147,4 +148,65 @@ export function box(root, { x, y, w, h, title: heading, html, color = 0 }) {
   if (heading) div(node, "box-title", { html: heading });
   div(node, "box-body", { html });
   return node;
+}
+
+// ---------- citations (shared references.bib, see deck/bib.js and the `b` window) ----------
+
+/** Keys and options of cite("a", "b", { page: "p. 3" }), "a, b" being accepted too. */
+function citeArgs(args) {
+  const options = typeof args.at(-1) === "object" ? args.at(-1) : {};
+  const keys = args.filter((a) => typeof a === "string").flatMap((a) => a.split(/[,\s]+/)).filter(Boolean);
+  return { keys, page: options.page ? `, ${options.page}` : "" };
+}
+
+function citeParts(keys, format) {
+  return keys.map((key) => {
+    const label = authorYear(key);
+    if (label) return format(label);
+    warnMissing(key);
+    return `<span class="cite-missing">?${escape(key)}</span>`;
+  });
+}
+
+/**
+ * Parenthetical citation, as HTML to put in a label, a list item or a box:
+ * cite("kipf2017") → [Kipf & Welling, 2017], cite("a", "b", { page: "p. 3" }) → [A, 2020; B, 2021, p. 3].
+ * An unknown key shows in red ([?key]) and is reported by tools/capture.py.
+ */
+export function cite(...args) {
+  const { keys, page } = citeArgs(args);
+  const parts = citeParts(keys, ({ names, year }) => `${names}, ${year}`);
+  return `<span class="cite" data-cite="${escape(keys.join(" "))}">[${parts.join("; ")}${page}]</span>`;
+}
+
+/** Textual citation, part of the sentence: citet("kipf2017") → Kipf & Welling (2017). */
+export function citet(...args) {
+  const { keys, page } = citeArgs(args);
+  const parts = citeParts(keys, ({ names, year }) => `${names} (${year}${keys.length === 1 ? page : ""})`);
+  return `<span class="citet" data-cite="${escape(keys.join(" "))}">${parts.join(", ")}</span>`;
+}
+
+/**
+ * References slide: a title and the full references, sorted by author then year.
+ * By default it lists every key cited in the presentation's sources (pages/*.js).
+ * A long list is split over several slides with `start` and `count`.
+ * Returns { heading, list, items, total } to animate the items.
+ */
+export function references(root, { keys, title: heading, start = 0, count, x, y, w, size } = {}) {
+  const all = sortKeys(keys ?? bibliography().cited);
+  const shown = all.slice(start, count === undefined ? undefined : start + count);
+  const fallback = document.documentElement.lang.startsWith("fr") ? "Références" : "References";
+  const headingNode = title(root, heading ?? fallback);
+  const list = document.createElement("ul");
+  list.className = "references";
+  Object.assign(list.style, { left: px(x), top: px(y), width: px(w), fontSize: px(size) });
+  for (const key of shown) {
+    const item = document.createElement("li");
+    item.dataset.cite = key;
+    item.innerHTML = fullReference(key);
+    if (!authorYear(key)) warnMissing(key);
+    list.appendChild(item);
+  }
+  root.appendChild(list);
+  return { heading: headingNode, list, items: [...list.children], total: all.length };
 }

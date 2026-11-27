@@ -8,6 +8,12 @@
     <link rel="icon" href="/deck/favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="/deck/home.css" />
     <link rel="stylesheet" href="/deck/welcome.css" />
+    <!-- Bibliography view: formulas in titles (KaTeX) and the slides' serif for the references. -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet" />
+    <script type="importmap">
+      { "imports": { "katex": "https://cdn.jsdelivr.net/npm/katex@0.16.11/+esm" } }
+    </script>
   </head>
   <body>
     <aside class="hm-side">
@@ -55,6 +61,7 @@
       <h1 class="hm-title"></h1>
       <section class="hm-cards"></section>
       <p class="hm-empty" hidden></p>
+      <section class="hm-bib" hidden></section>
     </main>
 
     <div class="hm-menu" hidden></div>
@@ -108,6 +115,32 @@
         <div class="hm-actions">
           <button type="button" data-action="cancel" data-i18n="home.cancel">Cancel</button>
           <button type="submit" class="hm-primary hm-danger" data-i18n="home.deleteConfirm">Delete permanently</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="hm-modal hm-bibedit" hidden>
+      <form class="hm-dialog hm-dialog-wide">
+        <h2 data-i18n="bib.editTitle">Edit the reference</h2>
+        <label><span>BibTeX</span><textarea name="bibtex" rows="14" spellcheck="false" class="hm-code"></textarea></label>
+        <label class="hm-check" hidden><input type="checkbox" name="rename" checked /><span></span></label>
+        <p class="hm-error"></p>
+        <div class="hm-actions">
+          <button type="button" data-action="cancel" data-i18n="home.cancel">Cancel</button>
+          <button type="submit" class="hm-primary" data-i18n="home.save">Save</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="hm-modal hm-bibdelete" hidden>
+      <form class="hm-dialog">
+        <h2 data-i18n="bib.deleteTitle">Delete this reference?</h2>
+        <p class="hm-bibdelete-ref"></p>
+        <p class="hm-warning"></p>
+        <p class="hm-error"></p>
+        <div class="hm-actions">
+          <button type="button" data-action="cancel" data-i18n="home.cancel">Cancel</button>
+          <button type="submit" class="hm-primary hm-danger" data-i18n="bib.deleteConfirm">Delete</button>
         </div>
       </form>
     </div>

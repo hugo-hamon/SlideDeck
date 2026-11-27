@@ -373,3 +373,101 @@ kbd {
 .hm-theme .hm-thumb { border-bottom: 1px solid var(--line); }
 .hm-theme strong { padding: 8px 10px 0; font-size: 14px; }
 .hm-theme small { padding: 2px 10px 10px; color: var(--muted); font-size: 12px; font-weight: 400; line-height: 1.35; }
+
+/* ---------- bibliography view (home-bib.js) ---------- */
+
+.hm-views hr { margin: 8px 10px; border: 0; border-top: 1px solid var(--line); }
+.hm-alert { flex: none; width: 8px; height: 8px; border-radius: 50%; background: #d1605a; }
+
+.hm-segment-text button { width: auto; padding: 0 12px; gap: 6px; display: inline-flex; align-items: center; font-size: 13px; }
+.hm-segment-text small { color: var(--muted); }
+.hm-segment-text button.warn small { color: #b3261e; font-weight: 700; }
+
+.hm-bib { display: flex; flex-direction: column; gap: 14px; max-width: 1180px; }
+.hm-bib-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.hm-bib-file { margin: 0; color: var(--muted); }
+.hm-bib-file code { color: var(--text); }
+
+.hm-bib-add { display: flex; gap: 8px; align-items: flex-start; }
+.hm-bib-add textarea,
+.hm-code {
+  flex: 1;
+  min-height: 42px;
+  padding: 10px 12px;
+  border: 1px solid #d5d9e2;
+  border-radius: 12px;
+  background: #fff;
+  font: 13px/1.5 ui-monospace, monospace !important;
+  resize: none;
+}
+
+.hm-code { min-height: 260px; resize: vertical; }
+.hm-bib-add textarea:focus { outline: 0; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.hm-bib-add .hm-primary:disabled { cursor: progress; opacity: 0.6; }
+.hm-bib-status { margin: -6px 0 0; color: var(--muted); }
+.hm-bib-status:empty { display: none; }
+.hm-bib-status.warn { color: #b3261e; }
+
+.hm-bib-list { display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: 14px; background: #fff; overflow: hidden; }
+.hm-bib-list .hm-empty { margin: 0; padding: 28px; text-align: center; }
+
+.hm-ref {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(180px, 280px) auto;
+  gap: 18px;
+  align-items: start;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.hm-ref:last-child { border-bottom: 0; }
+.hm-ref:hover { background: #fafbfd; }
+.hm-ref.missing { background: #fff8f7; }
+.hm-ref.flash { animation: hm-flash 1.8s ease-out; }
+
+@keyframes hm-flash { from { background: var(--accent-soft); } }
+
+/* Previewed in the slides' serif, as on the references slide. */
+.hm-ref-text { font: 17px/1.4 "EB Garamond", Georgia, serif; }
+.hm-ref-text .cite-missing { color: #b3261e; font-weight: 600; }
+.hm-ref.missing .hm-ref-text { font: 14px/1.45 var(--ui); color: var(--muted); }
+.hm-ref-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 6px; color: var(--muted); font-size: 12px; }
+.hm-ref-meta code { padding: 1px 6px; border-radius: 5px; background: #f0f2f7; color: var(--text); }
+.hm-ref-type { text-transform: lowercase; }
+.hm-ref-meta a { display: inline-flex; align-items: center; gap: 3px; color: var(--accent); text-decoration: none; }
+.hm-ref-meta a svg { width: 13px; height: 13px; }
+
+.hm-ref-usage { display: flex; flex-direction: column; gap: 6px; font-size: 13px; }
+.hm-ref-usage .hm-none { margin: 0; }
+.hm-use { display: flex; flex-direction: column; gap: 3px; }
+.hm-use-title { overflow: hidden; color: var(--text); font-weight: 600; text-decoration: none; text-overflow: ellipsis; white-space: nowrap; }
+.hm-use-title:hover { color: var(--accent); }
+.hm-use-slides { display: flex; flex-wrap: wrap; gap: 4px; }
+
+.hm-use-slides a {
+  min-width: 24px;
+  padding: 1px 6px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--accent);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  text-decoration: none;
+}
+
+.hm-use-slides a:hover { border-color: var(--accent); background: var(--accent-soft); }
+.hm-use-slides code { padding: 1px 6px; border-radius: 6px; background: #f0f2f7; color: var(--muted); }
+
+.hm-ref-actions { display: flex; gap: 2px; }
+.hm-icon-danger:hover { background: #fdecea !important; color: #b3261e !important; }
+
+.hm-check { flex-direction: row !important; align-items: center; gap: 8px !important; font-weight: 400 !important; }
+.hm-check input { accent-color: var(--accent); }
+.hm-bibdelete-ref { margin: 0; font: 16px/1.4 "EB Garamond", Georgia, serif; }
+
+@media (max-width: 900px) {
+  .hm-ref { grid-template-columns: 1fr auto; }
+  .hm-ref-usage { grid-column: 1 / -1; grid-row: 2; }
+}
+.hm-warning.hm-info { background: #f0f2f7; color: var(--muted); }

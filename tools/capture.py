@@ -7,7 +7,7 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
 from playwright.sync_api import Page, sync_playwright
-from serve import feedback_file, send_feedback
+from serve import feedback_file, send_bib, send_feedback
 
 ROOT = Path(__file__).resolve().parent.parent
 TILE = (640, 360)
@@ -45,7 +45,8 @@ def parse_args() -> argparse.Namespace:
 class QuietHandler(SimpleHTTPRequestHandler):
     """Serves the repository without logs, answering 204 on /__reload to disable live reload.
 
-    Edit-mode feedback stays readable (tools/review.py displays it).
+    Edit-mode feedback stays readable (tools/review.py displays it), and so does the
+    bibliography that `cite()` reads.
     """
 
     def do_GET(self) -> None:
@@ -54,6 +55,8 @@ class QuietHandler(SimpleHTTPRequestHandler):
             self.end_headers()
         elif (target := feedback_file(self.path)) is not None:
             send_feedback(self, target)
+        elif send_bib(self, self.path):
+            pass
         else:
             super().do_GET()
 

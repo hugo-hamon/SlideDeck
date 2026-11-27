@@ -192,7 +192,8 @@
 .opt-note { margin: 0; color: var(--opt-muted); }
 .opt-note code, .opt-help code { font: 12px ui-monospace, monospace; background: #f0f2f7; padding: 1px 5px; border-radius: 4px; }
 
-.opt-window kbd {
+.opt-window kbd,
+.bib-window kbd {
   display: inline-block;
   padding: 1px 7px;
   border: 1px solid #d5d9e2;
@@ -540,3 +541,87 @@ body.presenter .stage { border-radius: 6px; box-shadow: 0 10px 40px rgba(0, 0, 0
   .print-page:last-child { break-after: auto; page-break-after: auto; }
   * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
+
+/* ---------- bibliography window (b key, bibliography.js) ---------- */
+
+.bib-window {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: min(860px, 94vw);
+  height: min(720px, 90vh);
+  padding: 22px 26px 16px;
+  box-sizing: border-box;
+  border-radius: 18px;
+  background: #fff;
+  color: var(--opt-text);
+  font: 14px/1.45 var(--opt-ui);
+  box-shadow: 0 30px 80px rgba(10, 15, 30, 0.35), 0 0 0 1px rgba(10, 15, 30, 0.06);
+  transform: translateY(12px) scale(0.98);
+  transition: transform 0.2s ease-out;
+}
+
+.opt-backdrop.open .bib-window { transform: none; }
+.bib-window button, .bib-window input, .bib-window textarea { font: inherit; color: inherit; }
+.bib-window button { cursor: pointer; }
+.bib-window button:disabled { cursor: progress; opacity: 0.5; }
+.bib-window code { font: 12px ui-monospace, monospace; background: #f0f2f7; padding: 1px 5px; border-radius: 4px; }
+
+.bib-head { display: flex; align-items: flex-start; justify-content: space-between; padding-right: 40px; }
+.bib-head h2 { margin: 0; font-size: 20px; }
+.bib-file { color: var(--opt-muted); font: 12px ui-monospace, monospace; }
+
+.bib-add { display: flex; gap: 8px; align-items: flex-start; }
+.bib-add[hidden] { display: none; }
+
+.bib-add textarea {
+  flex: 1;
+  min-height: 38px;
+  padding: 8px 10px;
+  box-sizing: border-box;
+  resize: none;
+  border: 1px solid #d5d9e2;
+  border-radius: 10px;
+  font: 13px/1.45 ui-monospace, monospace !important;
+}
+
+.bib-add textarea:focus, .bib-search:focus { outline: 2px solid var(--opt-accent-soft); border-color: var(--opt-accent); }
+.bib-status { margin: -4px 0 0; min-height: 0; color: var(--opt-muted); }
+.bib-status:empty { display: none; }
+.bib-status.warn { color: #b3261e; }
+
+.bib-tools { display: flex; gap: 10px; align-items: center; }
+.bib-tools .opt-segment { flex: none; }
+
+.bib-list { flex: 1; margin: 0; padding: 0; overflow-y: auto; list-style: none; border-top: 1px solid var(--opt-line); }
+
+.bib-item { padding: 12px 4px; border-bottom: 1px solid var(--opt-line); }
+.bib-item.flash { animation: bib-flash 1.6s ease-out; }
+
+@keyframes bib-flash { from { background: var(--opt-accent-soft); } }
+
+/* The reference is previewed in the slides' serif, as it will appear on the references slide. */
+.bib-ref { font: 17px/1.4 "EB Garamond", Georgia, serif; }
+.bib-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 6px; }
+.bib-tag { padding: 1px 8px; border-radius: 99px; background: var(--opt-accent-soft); color: var(--opt-accent); font-size: 12px; font-weight: 600; }
+.bib-tag.warn { background: #fde8e7; color: #b3261e; }
+.bib-used { color: var(--opt-muted); font-size: 12px; }
+.bib-actions { display: flex; gap: 6px; align-items: center; margin-left: auto; }
+
+.bib-actions a,
+.bib-actions button {
+  padding: 4px 10px;
+  border: 1px solid #d5d9e2;
+  border-radius: 8px;
+  background: #fff;
+  color: var(--opt-text);
+  font-size: 12px;
+  text-decoration: none;
+}
+
+.bib-actions a:hover, .bib-actions button:hover { border-color: var(--opt-accent); }
+.bib-actions .bib-copy { border-color: var(--opt-accent); color: var(--opt-accent); font-weight: 600; }
+.bib-actions .done { background: var(--opt-accent); color: #fff; }
+.bib-empty { padding: 28px 4px; color: var(--opt-muted); text-align: center; }
+.bib-foot { color: var(--opt-muted); font-size: 12px; }
