@@ -426,10 +426,18 @@ function openMenu(button, item) {
     <button data-menu="archive">${icon(VIEWS[3][1])}${item.archived ? t("home.unarchive") : t("home.archive")}</button>
     <button data-menu="delete" class="hm-menu-danger">${icon('<path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-12M9 7V4h6v3"/>')}${t("home.delete")}</button>`;
   const box = button.getBoundingClientRect();
+  const margin = 12;
   menu.hidden = false;
-  const width = menu.offsetWidth;
-  Object.assign(menu.style, { top: `${box.bottom + 6}px`, left: `${Math.min(innerWidth - width - 12, box.right - width)}px` });
+  menu.style.maxHeight = `${innerHeight - 2 * margin}px`;
+  const { offsetWidth: width, offsetHeight: height } = menu;
+  // Below the button if it fits, otherwise above it, and always inside the window.
+  const below = box.bottom + 6;
+  const top = below + height <= innerHeight - margin ? below : Math.max(margin, box.top - 6 - height);
+  Object.assign(menu.style, { top: `${top}px`, left: `${Math.max(margin, Math.min(innerWidth - width - margin, box.right - width))}px` });
 }
+
+// The menu is fixed in the window: it closes when the page scrolls instead of floating away.
+addEventListener("scroll", () => state.menu && closeMenu(), { capture: true, passive: true });
 
 function closeMenu() {
   $(".hm-menu").hidden = true;
@@ -452,6 +460,7 @@ async function menuAction(action) {
       const { path } = await post("duplicate", { path: item.path });
       await load();
       toast(t("home.duplicated", { path }));
+      bib.load();
     } catch (error) {
       toast(error.message, true);
     }
@@ -518,6 +527,7 @@ deleteForm.addEventListener("submit", async (event) => {
     closeModals();
     render();
     toast(t("home.deleted", { path }));
+    bib.load();
   } catch (error) {
     deleteForm.querySelector(".hm-error").textContent = error.message;
   }
@@ -609,7 +619,13 @@ document.addEventListener("click", async (event) => {
   const card = target.closest(".hm-card");
   const item = card && state.items.find((i) => i.path === card.dataset.path);
   const { view, tag, untag, layout, action, menu } = target.dataset;
-  if (view) (state.view = view), (state.tag = null), render();
+  if (view) {
+    state.view = view;
+    state.tag = null;
+    render();
+    // Citations may have changed since the last visit (slides edited, presentation deleted).
+    if (view === "bib") bib.load();
+  }
   else if (tag !== undefined) {
     if (state.view === "bib") state.view = "all";
     state.tag = state.tag === tag && !card ? null : tag;

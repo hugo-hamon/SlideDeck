@@ -261,6 +261,7 @@ kbd {
   display: flex;
   flex-direction: column;
   min-width: 250px;
+  overflow-y: auto;
   padding: 6px;
   border-radius: 12px;
   background: var(--u-bg);
