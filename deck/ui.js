@@ -7,6 +7,9 @@ const STORAGE_KEY = "deck-settings";
 /** Interface stylesheets, loaded next to this file (or already inlined by the HTML export). */
 export const UI_STYLES = ["review.css", "options.css"];
 
+/** Light or dark interface (labels: `uiTheme.<id>`). "system" follows the OS setting. */
+export const UI_THEMES = ["system", "light", "dark"];
+
 /** Keyboard actions and their default keys, with labels in i18n.js (`action.<name>`). */
 export const ACTIONS = {
   next: ["ArrowRight", "ArrowDown", "PageDown", " "],
@@ -41,6 +44,7 @@ const DEFAULTS = {
   pen: { color: PEN_PALETTE[3], size: 6, eraser: 48, palette: PEN_PALETTE },
   backdrop: "slide",
   lang: "en",
+  ui: "system",
 };
 
 function read() {
@@ -57,6 +61,7 @@ export const settings = {
   pen: { ...DEFAULTS.pen, ...stored.pen },
   backdrop: stored.backdrop in BACKDROPS ? stored.backdrop : DEFAULTS.backdrop,
   lang: stored.lang ?? DEFAULTS.lang,
+  ui: UI_THEMES.includes(stored.ui) ? stored.ui : DEFAULTS.ui,
 };
 const listeners = new Set();
 
@@ -67,6 +72,22 @@ export function saveSettings() {
   } catch {}
   listeners.forEach((fn) => fn(settings));
 }
+
+// ---------- light / dark interface (deck/ui.css) ----------
+
+const darkQuery = globalThis.matchMedia?.("(prefers-color-scheme: dark)");
+
+/** "light" or "dark", once "system" is resolved. */
+export const uiTheme = () => (settings.ui === "system" ? (darkQuery?.matches ? "dark" : "light") : settings.ui);
+
+/** Sets `data-ui` on <html>, which switches the tokens of ui.css. The slides are not affected. */
+function applyUiTheme() {
+  document.documentElement.dataset.ui = uiTheme();
+}
+
+applyUiTheme();
+darkQuery?.addEventListener("change", applyUiTheme);
+listeners.add(applyUiTheme);
 
 export function onSettings(fn) {
   listeners.add(fn);

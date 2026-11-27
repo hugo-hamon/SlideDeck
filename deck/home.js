@@ -5,7 +5,7 @@
 import { createHomeBib } from "./home-bib.js";
 import { addStrings, lang, t, translatePage } from "./i18n.js";
 import { createOptions } from "./options.js";
-import { actionFor, loadStyle } from "./ui.js";
+import { actionFor, loadStyle, saveSettings, settings, uiTheme } from "./ui.js";
 import { setupWelcome } from "./welcome.js";
 
 const VIEWS = [
@@ -631,6 +631,10 @@ document.addEventListener("click", async (event) => {
   else if (action === "cancel") closeModals();
   else if (action === "help") welcome.open();
   else if (action === "settings") options.toggle(true);
+  else if (action === "theme") {
+    settings.ui = uiTheme() === "dark" ? "light" : "dark";
+    saveSettings();
+  }
 });
 
 $(".hm-search input").addEventListener("input", (event) => {

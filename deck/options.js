@@ -3,7 +3,7 @@
  * It floats above the slides, and Esc or `o` closes it.
  */
 import { LANGUAGES, keyLabel, lang, setLang, t } from "./i18n.js";
-import { ACTIONS, BACKDROPS, HOME_URL, actionFor, combo, exported, hasHome, resetPen, resetShortcuts, saveSettings, settings } from "./ui.js";
+import { ACTIONS, BACKDROPS, HOME_URL, UI_THEMES, actionFor, combo, exported, hasHome, resetPen, resetShortcuts, saveSettings, settings } from "./ui.js";
 
 const TABS = [
   ["export", '<path d="M12 3v12m0 0-4-4m4 4 4-4M5 21h14"/>'],
@@ -143,6 +143,11 @@ export function createOptions({ names = [], current = () => 0, pen = null, onBac
         ${Object.entries(LANGUAGES).map(([code, label]) => `<button data-lang="${code}" class="${lang() === code ? "on" : ""}">${label}</button>`).join("")}
       </div>
       <p class="opt-note">${t("opt.languageNote")}</p>
+      <h3>${t("opt.uiTheme")}</h3>
+      <div class="opt-segment">
+        ${UI_THEMES.map((id) => `<button data-uitheme="${id}" class="${settings.ui === id ? "on" : ""}">${t(`uiTheme.${id}`)}</button>`).join("")}
+      </div>
+      <p class="opt-note">${t("opt.uiThemeNote")}</p>
       <h3>${t("opt.backdrop")}</h3>
       <p class="opt-note">${t("opt.backdropNote")}</p>
       <div class="opt-backdrops">
@@ -202,6 +207,10 @@ export function createOptions({ names = [], current = () => 0, pen = null, onBac
       settings.backdrop = backdrop;
       saveSettings();
       onBackdrop?.();
+      render();
+    } else if (button.dataset.uitheme) {
+      settings.ui = button.dataset.uitheme;
+      saveSettings();
       render();
     } else if (button.dataset.lang && button.dataset.lang !== lang()) setLang(button.dataset.lang);
     else if (action === "close") toggle(false);

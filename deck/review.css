@@ -1,3 +1,4 @@
+@import url("ui.css");
 /* Edit mode (deck/review.js): annotation tool, outside the slides' art direction. */
 :root {
   --review: #d6287a;
@@ -71,9 +72,9 @@
   overflow-y: auto;
   flex-direction: column;
   gap: 8px;
-  background: #fff;
+  background: var(--u-bg);
   border-left: 3px solid var(--review);
-  color: #1f2430;
+  color: var(--u-text);
   font: 14px/1.4 var(--review-ui);
 }
 
@@ -88,8 +89,8 @@ body.reviewing .review-panel { display: flex !important; }
   font-size: 16px;
 }
 
-.review-panel header .rv-where { color: #555c6b; font-size: 13px; }
-.review-panel .rv-name { color: #8a90a0; font-size: 12px; min-height: 1em; font-family: ui-monospace, monospace; }
+.review-panel header .rv-where { color: var(--u-text-soft); font-size: 13px; }
+.review-panel .rv-name { color: var(--u-faint); font-size: 12px; min-height: 1em; font-family: ui-monospace, monospace; }
 
 .review-panel label {
   margin-top: 10px;
@@ -97,21 +98,21 @@ body.reviewing .review-panel { display: flex !important; }
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #555c6b;
+  color: var(--u-text-soft);
 }
 
 .review-panel button {
   font: inherit;
   cursor: pointer;
-  border: 1px solid #d5d9e2;
+  border: 1px solid var(--u-border);
   border-radius: 6px;
-  background: #f6f7fa;
+  background: var(--u-row);
   color: inherit;
   padding: 5px 9px;
 }
 
 .review-panel button:hover { border-color: var(--review); }
-.review-panel kbd { font: 11px ui-monospace, monospace; color: #8a90a0; }
+.review-panel kbd { font: 11px ui-monospace, monospace; color: var(--u-faint); }
 
 .rv-tools { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
 .rv-tools button.on { background: var(--review); border-color: var(--review); color: #fff; }
@@ -122,9 +123,11 @@ body.reviewing .review-panel { display: flex !important; }
   font: inherit;
   width: 100%;
   box-sizing: border-box;
-  border: 1px solid #d5d9e2;
+  border: 1px solid var(--u-border);
   border-radius: 6px;
   padding: 6px 8px;
+  background: var(--u-row);
+  color: var(--u-text);
   resize: vertical;
 }
 
@@ -148,7 +151,7 @@ body.reviewing .review-panel { display: flex !important; }
   font-size: 13px;
 }
 
-.rv-empty, .rv-none { margin: 0; color: #8a90a0; font-size: 13px; }
+.rv-empty, .rv-none { margin: 0; color: var(--u-faint); font-size: 13px; }
 
 .rv-index { display: flex; flex-wrap: wrap; gap: 6px; }
 .rv-chip { display: inline-flex; gap: 5px; align-items: baseline; }
@@ -164,5 +167,5 @@ body.reviewing .review-panel { display: flex !important; }
   gap: 8px;
 }
 
-.rv-status { color: #8a90a0; font-size: 12px; }
-.rv-status.warn { color: #b3261e; }
+.rv-status { color: var(--u-faint); font-size: 12px; }
+.rv-status.warn { color: var(--u-danger); }

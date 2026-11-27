@@ -22,7 +22,8 @@ SlideDeck/
 │                         # welcome.* (fenêtre d'accueil), tour.* + tour-deck.js (tutoriel guidé),
 │                         # presenter.js + notes.js (touche s), overview.js (g), laser.js (l), print.js (PDF), mount.js,
 │                         # i18n.js (langue de l'interface : anglais par défaut, français),
-│                         # bib.js + bibliography.js (citations, fenêtre b)
+│                         # bib.js + bibliography.js (citations, fenêtre b), home-bib.js (vue Bibliographie),
+│                         # ui.css (couleurs de l'interface, mode clair et sombre)
 ├── tools/                # serve.py (aperçu + accueil), library.py (accueil), capture.py (storyboard), review.py (retours), gif.py (export GIF), bib.py (bibliographie), new.py
 ├── templates/presentation/
 ├── examples/<nom>/        # exemple livré avec le dépôt (même structure, sans année)
@@ -51,6 +52,9 @@ SlideDeck/
   `tools/`, `templates/` comme dans les présentations.
   - Le texte de l'interface de l'outil ne s'écrit jamais en dur : il passe par `t("clé")` de
     `deck/i18n.js`, avec une entrée `en` et une entrée `fr` pour chaque clé.
+  - Les couleurs de l'interface (accueil, menus, fenêtres) ne s'écrivent pas en dur non plus :
+    elles passent par les jetons `--u-*` de `deck/ui.css`, qui ont une valeur claire et une
+    valeur sombre. Les slides gardent leurs propres jetons (`--paper`, `--ink`…).
   - Seul le **contenu des slides** (titres, textes, formules affichés) et le `README.md` d'une
     présentation suivent la langue de la présentation.
 - **Style d'écriture : pas de point-virgule dans une phrase**, en français comme en anglais.

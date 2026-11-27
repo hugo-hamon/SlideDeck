@@ -47,6 +47,7 @@ view with notes, a pen and a laser pointer for remote teaching, and HTML, PDF or
 | 📦 **Export** | A single offline `.html` file, a vector PDF (one page per step or per slide), or animated GIFs. |
 | 🤖 **Agent-friendly** | An agent writes the slides, captures every step in a headless browser, checks its own work, and reads the feedback you draw on the slides. |
 | 🌍 **English / French** | The interface is in English by default, French in one click. |
+| 🌙 **Dark mode** | Home page, menus and windows in light or dark, or following the system. The slides keep their template. |
 
 ## Quick start
 
@@ -144,7 +145,9 @@ A floating window that groups:
     one, with looping slides exported as one seamless cycle.
 - **Shortcuts**: rebind every key.
 - **Pen**: wheel colours and default sizes.
-- **Appearance**: interface language (English / French) and the backdrop around the slide.
+- **Appearance**: interface language (English / French), light or dark interface (or the
+  system's setting, also switched by the moon button of the home page), and the backdrop around
+  the slide.
 
 ### Edit mode: feedback for the agent (`e`)
 

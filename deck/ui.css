@@ -1,0 +1,108 @@
+/*
+ * Colours of the tool's interface (home page, options, bibliography, edit mode, tour), in light
+ * and dark mode. The slides keep their own theme (theme.css, themes/*.css).
+ *
+ * ui.js sets `data-ui="dark"` on <html> from Options → Appearance (system, light or dark).
+ * Every interface stylesheet imports this file and only uses these tokens.
+ */
+:root {
+  --u-font: system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: light;
+
+  --u-page: #fbfcfe;          /* home page background */
+  --u-bg: #fff;               /* windows, cards, inputs */
+  --u-bg-soft: #f5f7fb;       /* side bars, footers */
+  --u-raised: #fff;           /* selected segment, kbd */
+  --u-sunken: #f0f2f7;        /* segments, chips, code */
+  --u-hover: #e9edf5;
+  --u-row: #fafbfd;           /* hovered row, unselected tile */
+  --u-tint: #f3f6fc;          /* tips, hero */
+
+  --u-text: #1f2430;
+  --u-text-soft: #4b5262;
+  --u-muted: #6b7283;
+  --u-faint: #8a90a0;
+  --u-line: #e3e7ef;
+  --u-border: #d5d9e2;
+  --u-border-strong: #c3cbdb;
+
+  --u-accent: #3d6fd1;
+  --u-accent-soft: rgba(61, 111, 209, 0.12);
+  --u-accent-fill: #3d6fd1;   /* filled buttons, with --u-on-accent text */
+  --u-on-accent: #fff;
+  --u-danger: #b3261e;
+  --u-danger-fill: #b3261e;
+  --u-danger-soft: #fdecea;
+  --u-danger-text: #8c1d18;
+  --u-success: #1e7a5c;
+  --u-success-soft: #e6f6ef;
+  --u-warn: #a35b00;
+  --u-warn-soft: #fff3e0;
+  --u-star: #e0a100;
+
+  /* logo and illustrations: the three category colours of the slides */
+  --u-blue: #4a78d0;
+  --u-green: #2f9e7f;
+  --u-red: #d1605a;
+  --u-sketch: #8a93a8;
+  --u-sketch-soft: #c3cad8;
+  --u-dot: #d9deea;
+  --u-dot-seen: #a9bce6;
+
+  --u-backdrop: rgba(15, 20, 32, 0.28);
+  --u-veil: rgba(15, 20, 32, 0.5);
+  --u-shadow: rgba(10, 15, 30, 0.35);
+  --u-shadow-soft: rgba(10, 15, 30, 0.12);
+  --u-ring: rgba(10, 15, 30, 0.06);
+  --u-toast: rgba(20, 24, 33, 0.92);
+}
+
+:root[data-ui="dark"] {
+  color-scheme: dark;
+
+  --u-page: #121419;
+  --u-bg: #1b1e25;
+  --u-bg-soft: #16191f;
+  --u-raised: #2f3541;
+  --u-sunken: #252a33;
+  --u-hover: #2a303a;
+  --u-row: #20242c;
+  --u-tint: #1f2633;
+
+  --u-text: #e6e9ef;
+  --u-text-soft: #c2c8d4;
+  --u-muted: #9aa3b5;
+  --u-faint: #7d8597;
+  --u-line: #2b303a;
+  --u-border: #3a414e;
+  --u-border-strong: #4b5363;
+
+  --u-accent: #6f9cf2;
+  --u-accent-soft: rgba(111, 156, 242, 0.18);
+  --u-accent-fill: #3f6fcf;
+  --u-on-accent: #fff;
+  --u-danger: #f08a82;
+  --u-danger-fill: #c2453c;
+  --u-danger-soft: rgba(240, 138, 130, 0.14);
+  --u-danger-text: #f6aca6;
+  --u-success: #66cfa8;
+  --u-success-soft: rgba(102, 207, 168, 0.14);
+  --u-warn: #f0b35a;
+  --u-warn-soft: rgba(240, 179, 90, 0.15);
+  --u-star: #f2c14e;
+
+  --u-blue: #6f9cf2;
+  --u-green: #4fc39b;
+  --u-red: #ec8079;
+  --u-sketch: #8d96aa;
+  --u-sketch-soft: #4a5263;
+  --u-dot: #3a414e;
+  --u-dot-seen: #5b75a8;
+
+  --u-backdrop: rgba(0, 0, 0, 0.5);
+  --u-veil: rgba(0, 0, 0, 0.6);
+  --u-shadow: rgba(0, 0, 0, 0.6);
+  --u-shadow-soft: rgba(0, 0, 0, 0.35);
+  --u-ring: rgba(255, 255, 255, 0.07);
+  --u-toast: rgba(44, 50, 62, 0.96);
+}
